@@ -5,7 +5,7 @@ import sys
 def main():
     input_filename = sys.argv[1]
 
-    while ass_file as open(input_filename, 'r'):
+    with open(input_filename, 'r') as ass_file:
         program = ass_file.readlines()
 
 if __name__ == '__main__':
