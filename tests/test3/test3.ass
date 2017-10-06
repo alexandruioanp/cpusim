@@ -1,0 +1,70 @@
+XOR R0,R0,R0
+XOR R1,R1,R1
+ADDI R1,R1,0
+WRS 0
+RD R2
+STORE R2,R0,20
+WRS 0
+RD R2
+STORE R2,R0,24
+WRS 28
+LOAD R2,R0,20
+WR R2
+WRS 38
+LOAD R2,R0,24
+WR R2
+WRS 51
+HALT
+DATA 69 ; E 
+DATA 110 ; n 
+DATA 116 ; t 
+DATA 101 ; e 
+DATA 114 ; r 
+DATA 32 ;   
+DATA 97 ; a 
+DATA 32 ;   
+DATA 110 ; n 
+DATA 117 ; u 
+DATA 109 ; m 
+DATA 98 ; b 
+DATA 101 ; e 
+DATA 114 ; r 
+DATA 58 ; : 
+DATA 32 ;   
+DATA 0 ;  
+DATA 0 ;  
+DATA 0 ;  
+DATA 0 ;  
+DATA 0 ;  i
+DATA 0 ;  i
+DATA 0 ;  i
+DATA 0 ;  i
+DATA 0 ;  x
+DATA 0 ;  x
+DATA 0 ;  x
+DATA 0 ;  x
+DATA 70 ; F 
+DATA 105 ; i 
+DATA 114 ; r 
+DATA 115 ; s 
+DATA 116 ; t 
+DATA 32 ;   
+DATA 105 ; i 
+DATA 115 ; s 
+DATA 32 ;   
+DATA 0 ;  
+DATA 59 ; ; 
+DATA 32 ;   
+DATA 115 ; s 
+DATA 101 ; e 
+DATA 99 ; c 
+DATA 111 ; o 
+DATA 110 ; n 
+DATA 100 ; d 
+DATA 32 ;   
+DATA 105 ; i 
+DATA 115 ; s 
+DATA 32 ;   
+DATA 0 ;  
+DATA 10 ;  
+DATA 0 ;  

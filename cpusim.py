@@ -3,21 +3,24 @@
 import sys
 import re
 
+
 class Instruction():
     def __str__(self):
         return self.opcode + " " + str(self.operands)
 
     def __init__(self, asm):
         comps = asm.split(' ')
-        #if comps[0] == "HALT":
+        # if comps[0] == "HALT":
         #    self.opcode = comps[0]
         #    self.operands = [""]
-        #else:
+        # else:
         self.opcode, self.operands = comps
         self.operands = self.operands.split(',')
-        print(self.opcode, self.operands)
+        # print(self.opcode, self.operands)
+
 
 R = [0] * 10
+
 
 def run(program, data):
     for i in program:
@@ -43,9 +46,10 @@ def run(program, data):
                 addr += 1
         else:
             print("ERROR: unknown opcode", i.opcode)
-            #sys.exit(1)
+            # sys.exit(1)
 
-    print(R)
+    # print(R)
+
 
 def assemble(asm, program, data):
     label_targets = {}
@@ -61,7 +65,7 @@ def assemble(asm, program, data):
         if ':' in line:
             same_line_no.append(line[:-1])
         elif not 'DATA' in line:
-            if(same_line_no):
+            if same_line_no:
                 num_labels += len(same_line_no)
                 for label in same_line_no:
                     label_targets[label] = line_no - num_labels
@@ -81,14 +85,15 @@ def assemble(asm, program, data):
         if 'IADDR' in line:
             dest_reg, label = line.split(' ')[1].split(',')
             line = "LDI " + dest_reg + "," + str(label_targets[label])
-            #print(line)
+            # print(line)
 
         if not 'DATA' in line and not ":" in line and not "HALT" in line:
             instr = Instruction(line)
             program.append(instr)
 
-def main():
-    input_filename = sys.argv[1]
+
+def main(input_filename):
+    # sys.stdout = open("sim.out", "w")
 
     with open(input_filename, 'r') as ass_file:
         asm = ass_file.readlines()
@@ -99,5 +104,9 @@ def main():
 
     run(program, data_mem)
 
+    # sys.stdout.close()
+
+
 if __name__ == '__main__':
-    main()
+    # print(sys.argv)
+    main(sys.argv[1])
