@@ -1,10 +1,8 @@
 import unittest
-import cpusim
 from subprocess import Popen, PIPE, STDOUT
 import os
 
 def test_generic(test_name):
-
     p = Popen(['python', 'cpusim.py', os.path.join("tests", test_name, test_name + ".ass")], stdout=PIPE, stdin=PIPE,
               stderr=STDOUT)
 
