@@ -1,5 +1,7 @@
 import sys
 
+import global_vars
+
 def get_instruction(line):
     opcode = line.split(' ')[0]
 
@@ -10,14 +12,19 @@ def get_instruction(line):
 
     return i
 
+
 class Instruction:
     def __str__(self):
         return self.opcode + " " + str(self.operands)
 
     def __init__(self, asm):
         comps = asm.split(' ')
-        self.opcode, self.operands = comps
-        self.operands = self.operands.split(',')
+        self.opcode = comps[0]
+        if len(comps) > 1:
+            self.operands = comps[1]
+            self.operands = self.operands.split(',')
+        else:
+            self.operands = ""
 
     def decode(self):
         pass
@@ -31,7 +38,7 @@ class Instruction:
 
 class ALUInstruction(Instruction):
     def writeback(self):
-        R[self.dest] = self.result
+        global_vars.R.set(self.dest, self.result)
 
 
 class XORInstruction(ALUInstruction):
@@ -41,7 +48,7 @@ class XORInstruction(ALUInstruction):
         self.src2 = int(self.operands[2][1:])
 
     def execute(self):
-        self.result = R[self.src1] ^ R[self.src2]
+        self.result = global_vars.R.get(self.src1) ^ global_vars.R.get(self.src2)
 
 
 class WRSInstruction(Instruction):
@@ -49,8 +56,8 @@ class WRSInstruction(Instruction):
         self.addr = int(self.operands[0])
 
     def execute(self):
-        while data[self.addr]:
-            sys.stdout.write(chr(data[self.addr])),
+        while global_vars.data_mem[self.addr]:
+            sys.stdout.write(chr(global_vars.data_mem[self.addr])),
             self.addr += 1
 
 
@@ -59,7 +66,8 @@ class WRInstruction(Instruction):
         self.src = int(self.operands[0][1:])
 
     def execute(self):
-        sys.stdout.write(str(R[self.src]))
+        sys.stdout.write(str(global_vars.R.get(self.src)))
+
 
 class ADDIInstruction(ALUInstruction):
     def decode(self):
@@ -68,13 +76,17 @@ class ADDIInstruction(ALUInstruction):
         self.imm = int(self.operands[2])
 
     def execute(self):
-        self.result = R[self.src] + self.imm
+        self.result = global_vars.R.get(self.src) + self.imm
 
+
+class HALTInstruction(Instruction):
+    pass
 
 instruction_types = {
         "XOR": XORInstruction,
         "WRS": WRSInstruction,
         "WR": WRInstruction,
+        "HALT": HALTInstruction,
         # "STORE": STOREInstruction,
         # "RD": RDInstruction,
         # "BGEZ": BGEZInstruction,
@@ -94,5 +106,4 @@ instruction_types = {
         # "MUL": MULInstruction,
         # "DIV": DIVInstruction,
         # "LDI": LDIInstruction
-        "HALT": None
     }

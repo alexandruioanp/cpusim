@@ -12,7 +12,8 @@ def test_generic(test_name):
         with open(os.path.join("tests", test_name, test_name + ".in"), "r") as inf:
             data_in = inf.read()
 
-    cmd_out = p.communicate(input=data_in)[0]
+    cmd_out = p.communicate(input=data_in.encode())[0]
+    p.wait()
     expected_out = ""
 
     with open(os.path.join("tests", test_name, test_name + ".res"), "r") as expectedf:
@@ -27,6 +28,7 @@ class TestSim(unittest.TestCase):
 
     def test1(self):
         cmd_out, expected_out = test_generic("test1")
+        # print(cmd_out, expected_out)
         self.assertEqual(cmd_out, expected_out)
 
     def test2(self):
