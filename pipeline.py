@@ -1,5 +1,3 @@
-from enum import Enum
-
 import global_vars
 
 Stages = {
@@ -9,10 +7,11 @@ Stages = {
     "WRITEBACK" : 3
 }
 
-class State(Enum):
-    OK     = 0
-    STALL  = 1
-    WHOOPS = 2
+State = {
+    "OK":     0,
+    "STALL":  1,
+    "WHOOPS": 2
+}
 
 class Pipeline:
     def __init__(self):
@@ -20,6 +19,9 @@ class Pipeline:
         self.pipe = [None] * self.NUM_STAGES
 
     def advance(self):
+        if self.pipe == [None] * self.NUM_STAGES:
+            print("no need to advance; pipeline empty")
+
         if self.pipe[-1]:
             print("instr", self.pipe[-1], "not retired")
             return 1
@@ -28,12 +30,10 @@ class Pipeline:
             return 0
 
     def push(self, instr):
-        a = self.advance()
-
-        if a == 0:
-            if self.pipe[0]:
-                print("slot 0 not empty", self.pipe[0])
-            else:
-                self.pipe[0] = instr
+        if self.pipe[0]:
+            print("slot 0 not empty", self.pipe[0])
         else:
-            print("could not advance pipeline")
+            self.pipe[0] = instr
+
+    def stall(self, stage):
+        pass

@@ -11,6 +11,9 @@ from registerfile import *
 from pipeline import *
 import global_vars
 
+debug = True
+debug = False
+
 class Computor:
     def __init__(self, program):
         self._program = program
@@ -23,35 +26,112 @@ class Computor:
         # self.execunit = ex
         self.clock_cnt = 0
 
-    def run(self):
+    def run_non_pipelined(self):
         for i_list in self.fetchunit.fetch(1):
-            for i in i_list:
-                if i:
-                    # fetch
-                    self.clock_cnt += 1
-                    global_vars.pipeline.push(i)
+            if debug:
+                print("START")
 
-                    # print("START")
-                    # print(global_vars.pipeline.pipe)
-                    global_vars.pipeline.advance()
-                    # decode
-                    self.clock_cnt += 1
-                    self.decodeunit.decode()
-                    global_vars.pipeline.advance()
-                    # print(global_vars.pipeline.pipe)
-                    # execute
-                    self.clock_cnt += 1
-                    self.execunit.execute()
-                    global_vars.pipeline.advance()
-                    # print(global_vars.pipeline.pipe)
-                    # writeback
-                    self.clock_cnt += 1
-                    self.wbunit.writeback()
-                    # print("END")
-                    # print(global_vars.pipeline.pipe)
-                    # remove
+            # fetch
+            if debug:
+                print(global_vars.pipeline.pipe, "clk", self.clock_cnt)
+            global_vars.pipeline.push(i_list[0])
+            global_vars.pipeline.advance()
+            self.clock_cnt += 1
 
-        # print("Cycles taken:", self.clock_cnt)
+            #decode
+            if debug:
+                print("After fetch:", global_vars.pipeline.pipe, "clk", self.clock_cnt)
+            self.decodeunit.decode()
+            global_vars.pipeline.advance()
+            self.clock_cnt += 1
+
+            # execute
+            if debug:
+                print("After decode:", global_vars.pipeline.pipe, "clk", self.clock_cnt)
+            self.execunit.execute()
+            global_vars.pipeline.advance()
+            self.clock_cnt += 1
+
+            # writeback
+            if debug:
+                print("After execute:", global_vars.pipeline.pipe, "clk", self.clock_cnt)
+            self.wbunit.writeback()
+            global_vars.pipeline.advance()
+            self.clock_cnt += 1
+
+            if debug:
+                print("After writeback:", global_vars.pipeline.pipe, "clk", self.clock_cnt)
+
+            if debug:
+                print("END")
+
+        print("Cycles taken:", self.clock_cnt)
+
+
+    def run_pipelined(self):
+        for i_list in self.fetchunit.fetch(1):
+            # fetch
+            if debug:
+                print("START")
+
+            # fetch
+            if debug:
+                print(global_vars.pipeline.pipe, "clk", self.clock_cnt)
+            global_vars.pipeline.push(i_list[0])
+            self.clock_cnt += 1
+
+            #decode
+            if debug:
+                print("After fetch:", global_vars.pipeline.pipe, "clk", self.clock_cnt)
+            self.decodeunit.decode()
+
+            # execute
+            if debug:
+                print("After decode:", global_vars.pipeline.pipe, "clk", self.clock_cnt)
+            self.execunit.execute()
+
+            # writeback
+            if debug:
+                print("After execute:", global_vars.pipeline.pipe, "clk", self.clock_cnt)
+            self.wbunit.writeback()
+            global_vars.pipeline.advance()
+
+            if debug:
+                print("After writeback:", global_vars.pipeline.pipe, "clk", self.clock_cnt)
+
+            if debug:
+                print("END")
+
+        #
+        self.decodeunit.decode()
+        self.execunit.execute()
+        if debug:
+            print("Before flush 1:", global_vars.pipeline.pipe, "clk", self.clock_cnt)
+        self.wbunit.writeback()
+        self.clock_cnt += 1
+
+        #
+        global_vars.pipeline.advance()
+        self.decodeunit.decode()
+        self.execunit.execute()
+        if debug:
+            print("Before lush 2:", global_vars.pipeline.pipe, "clk", self.clock_cnt)
+        self.wbunit.writeback()
+        self.clock_cnt += 1
+
+        #
+        global_vars.pipeline.advance()
+        self.decodeunit.decode()
+        self.execunit.execute()
+        if debug:
+            print("Before flush 3:", global_vars.pipeline.pipe, "clk", self.clock_cnt)
+        self.wbunit.writeback()
+        self.clock_cnt += 1
+
+        if debug:
+            print("After flush 3:", global_vars.pipeline.pipe, "clk", self.clock_cnt)
+
+        print("Cycles taken:", self.clock_cnt)
 
 def assemble(asm, program):
     label_targets = {}
@@ -99,7 +179,7 @@ def main(input_filename):
     global_vars.pipeline = Pipeline()
     pc3000 = Computor(program)
 
-    pc3000.run()
+    pc3000.run_pipelined()
 
 
 if __name__ == '__main__':

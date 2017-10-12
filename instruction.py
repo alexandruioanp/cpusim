@@ -12,6 +12,8 @@ def get_instruction(line):
 
     return i
 
+def getNOP():
+    return NOPInstruction()
 
 class Instruction:
     def __str__(self):
@@ -29,6 +31,21 @@ class Instruction:
     def decode(self):
         pass
 
+    def evaluate_operands(self, bypass):
+        (reg, val) = bypass
+        print(bypass)
+        try:
+            for idx, src in enumerate(self.src):
+                print(idx, src)
+                if src == reg:
+                    print(str(self))
+                    print("WILL REPLACE", reg, "with", val)
+                else:
+                    # default value
+                    self.operand_vals[idx] =
+        except AttributeError:
+            pass
+
     def execute(self):
         pass
 
@@ -44,11 +61,10 @@ class ALUInstruction(Instruction):
 class XORInstruction(ALUInstruction):
     def decode(self):
         self.dest = int(self.operands[0][1:])
-        self.src1 = int(self.operands[1][1:])
-        self.src2 = int(self.operands[2][1:])
+        self.src = [int(self.operands[1][1:]), int(self.operands[2][1:])]
 
     def execute(self):
-        self.result = global_vars.R.get(self.src1) ^ global_vars.R.get(self.src2)
+        self.result = global_vars.R.get(self.src[0]) ^ global_vars.R.get(self.src[1])
 
 
 class WRSInstruction(Instruction):
@@ -63,23 +79,26 @@ class WRSInstruction(Instruction):
 
 class WRInstruction(Instruction):
     def decode(self):
-        self.src = int(self.operands[0][1:])
+        self.src = [int(self.operands[0][1:])]
 
     def execute(self):
-        sys.stdout.write(str(global_vars.R.get(self.src)))
+        sys.stdout.write(str(global_vars.R.get(self.src[0])))
 
 
 class ADDIInstruction(ALUInstruction):
     def decode(self):
         self.dest = int(self.operands[0][1:])
-        self.src = int(self.operands[1][1:])
+        self.src = [int(self.operands[1][1:])]
         self.imm = int(self.operands[2])
 
     def execute(self):
-        self.result = global_vars.R.get(self.src) + self.imm
+        self.result = global_vars.R.get(self.src[0]) + self.imm
 
 
 class HALTInstruction(Instruction):
+    pass
+
+class NOPInstruction(Instruction):
     pass
 
 instruction_types = {
@@ -105,5 +124,6 @@ instruction_types = {
         # "SUB": SUBInstruction,
         # "MUL": MULInstruction,
         # "DIV": DIVInstruction,
-        # "LDI": LDIInstruction
+        # "LDI": LDIInstruction,
+        "NOP": NOPInstruction
     }
