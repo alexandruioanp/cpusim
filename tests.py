@@ -2,8 +2,8 @@ import unittest
 from subprocess import Popen, PIPE, STDOUT
 import os
 
-def test_generic(test_name):
-    p = Popen(['python', 'cpusim.py', os.path.join("tests", test_name, test_name + ".ass")], stdout=PIPE, stdin=PIPE,
+def test_generic(test_name, pipelined=0):
+    p = Popen(['python', 'cpusim.py', "--file", os.path.join("tests", test_name, test_name + ".ass"), "--pipelined", str(pipelined)], stdout=PIPE, stdin=PIPE,
               stderr=STDOUT)
 
     data_in = ""
@@ -26,6 +26,7 @@ class TestSim(unittest.TestCase):
     def setUp(self):
         pass
 
+    # non-pipelined
     def test1(self):
         cmd_out, expected_out = test_generic("test1")
         # print(cmd_out, expected_out)
@@ -55,5 +56,43 @@ class TestSim(unittest.TestCase):
         cmd_out, expected_out = test_generic("testsk")
         self.assertEqual(cmd_out, expected_out)
 
+    def testsk_no_haz(self):
+        cmd_out, expected_out = test_generic("testsk-no-haz")
+        self.assertEqual(cmd_out, expected_out)
+
+    # pipelined
+    def test1_pipe(self):
+        cmd_out, expected_out = test_generic("test1", 1)
+        # print(cmd_out, expected_out)
+        self.assertEqual(cmd_out, expected_out)
+
+    def test2_pipe(self):
+        cmd_out, expected_out = test_generic("test2", 1)
+        self.assertEqual(cmd_out, expected_out)
+
+    def test3_pipe(self):
+        cmd_out, expected_out = test_generic("test3", 1)
+        self.assertEqual(cmd_out, expected_out)
+
+    def test4_pipe(self):
+        cmd_out, expected_out = test_generic("test4", 1)
+        self.assertEqual(cmd_out, expected_out)
+
+    def test6_pipe(self):
+        cmd_out, expected_out = test_generic("test6", 1)
+        self.assertEqual(cmd_out, expected_out)
+
+    def test7_pipe(self):
+        cmd_out, expected_out = test_generic("test7", 1)
+        self.assertEqual(cmd_out, expected_out)
+
+    def testsk_pipe(self):
+        cmd_out, expected_out = test_generic("testsk", 1)
+        self.assertEqual(cmd_out, expected_out)
+
+    def testsk_no_haz_pipe(self):
+        cmd_out, expected_out = test_generic("testsk-no-haz", 1)
+        self.assertEqual(cmd_out, expected_out)
+
 if __name__ == '__main__':
-    unittest.main()
+    unittest.main(verbosity=2)

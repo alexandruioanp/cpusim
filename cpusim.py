@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import re
+import argparse
 
 from instruction import *
 from fetchunit import *
@@ -65,7 +66,7 @@ class Computor:
             if debug:
                 print("END")
 
-        print("Cycles taken:", self.clock_cnt)
+        # print("Cycles taken:", self.clock_cnt)
 
 
     def run_pipelined(self):
@@ -131,7 +132,7 @@ class Computor:
         if debug:
             print("After flush 3:", global_vars.pipeline.pipe, "clk", self.clock_cnt)
 
-        print("Cycles taken:", self.clock_cnt)
+        # print("Cycles taken:", self.clock_cnt)
 
 def assemble(asm, program):
     label_targets = {}
@@ -169,7 +170,9 @@ def assemble(asm, program):
             program.append(instr)
 
 
-def main(input_filename):
+def main(args):
+    input_filename = args.file
+
     with open(input_filename, 'r') as ass_file:
         asm = ass_file.readlines()
 
@@ -179,8 +182,15 @@ def main(input_filename):
     global_vars.pipeline = Pipeline()
     pc3000 = Computor(program)
 
-    pc3000.run_pipelined()
+    pc3000.run_pipelined() if args.pipelined else pc3000.run_non_pipelined()
 
 
 if __name__ == '__main__':
-    main(sys.argv[1])
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--file', required=True, help='Input .ass file')
+    parser.add_argument('--pipelined', required=False, default=0, type=int, choices={0, 1}, help='Run in pipelined mode?')
+
+    args = parser.parse_args()
+
+    main(args)

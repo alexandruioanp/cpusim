@@ -20,10 +20,11 @@ class Pipeline:
 
     def advance(self):
         if self.pipe == [None] * self.NUM_STAGES:
-            print("no need to advance; pipeline empty")
+            return
+            # print("no need to advance; pipeline empty")
 
         if self.pipe[-1]:
-            print("instr", self.pipe[-1], "not retired")
+            # print("instr", self.pipe[-1], "not retired")
             return 1
         else:
             self.pipe = [None] + self.pipe[:-1]

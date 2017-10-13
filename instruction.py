@@ -15,6 +15,9 @@ def get_instruction(line):
 def getNOP():
     return NOPInstruction()
 
+debug = True
+debug = False
+
 class Instruction:
     def __str__(self):
         return self.opcode + " " + str(self.operands)
@@ -27,24 +30,42 @@ class Instruction:
             self.operands = self.operands.split(',')
         else:
             self.operands = ""
+        self.operand_vals = []
+        self.src = []
+        self.dest = []
 
     def decode(self):
         pass
 
     def evaluate_operands(self, bypass):
-        (reg, val) = bypass
-        print(bypass)
+        if debug:
+            print("-" * 30)
         try:
-            for idx, src in enumerate(self.src):
-                print(idx, src)
+            (reg, val) = bypass
+        except TypeError:
+            reg = val = -1
+
+        if debug:
+            print(str(self))
+
+        for idx, src in enumerate(self.src):
+            if debug:
+                print(idx, ".src", src)
+            try:
+                src = int(src)
+
+                if debug:
+                    print("using immediate value")
+                self.operand_vals.append(src)
+            except ValueError:
                 if src == reg:
-                    print(str(self))
-                    print("WILL REPLACE", reg, "with", val)
+                    if debug:
+                        print("WILL REPLACE", "R" + str(reg), "with", val)
+                    self.operand_vals.append(val)
                 else:
-                    # default value
-                    self.operand_vals[idx] =
-        except AttributeError:
-            pass
+                    if debug:
+                        print("Will get from reg")
+                    self.operand_vals.append(global_vars.R.get(int(src[1:])))
 
     def execute(self):
         pass
@@ -55,44 +76,49 @@ class Instruction:
 
 class ALUInstruction(Instruction):
     def writeback(self):
-        global_vars.R.set(self.dest, self.result)
+        global_vars.R.set(int(self.dest[1:]), self.result)
 
 
 class XORInstruction(ALUInstruction):
     def decode(self):
-        self.dest = int(self.operands[0][1:])
-        self.src = [int(self.operands[1][1:]), int(self.operands[2][1:])]
+        # self.dest = int(self.operands[0][1:])
+        self.dest = self.operands[0]
+        # self.src = [int(self.operands[1][1:]), int(self.operands[2][1:])]
+        # self.src = [int(self.operands[1][1:]), int(self.operands[2][1:])]
+        self.src = list(self.operands[1:])
 
     def execute(self):
-        self.result = global_vars.R.get(self.src[0]) ^ global_vars.R.get(self.src[1])
+        self.result = self.operand_vals[0] ^ self.operand_vals[1]
 
 
 class WRSInstruction(Instruction):
     def decode(self):
-        self.addr = int(self.operands[0])
+        self.src = [int(self.operands[0])]
+        # self.src = list(self.operands)
 
     def execute(self):
-        while global_vars.data_mem[self.addr]:
-            sys.stdout.write(chr(global_vars.data_mem[self.addr])),
-            self.addr += 1
+        while global_vars.data_mem[self.operand_vals[0]]:
+            sys.stdout.write(chr(global_vars.data_mem[self.operand_vals[0]])),
+            self.operand_vals[0] += 1
 
 
 class WRInstruction(Instruction):
     def decode(self):
-        self.src = [int(self.operands[0][1:])]
+        # self.src = [int(self.operands[0][1:])]
+        self.src = list(self.operands)
 
     def execute(self):
-        sys.stdout.write(str(global_vars.R.get(self.src[0])))
+        sys.stdout.write(str(self.operand_vals[0]))
 
 
 class ADDIInstruction(ALUInstruction):
     def decode(self):
-        self.dest = int(self.operands[0][1:])
-        self.src = [int(self.operands[1][1:])]
-        self.imm = int(self.operands[2])
+        self.dest = self.operands[0]
+        # self.src = [int(self.operands[1][1:]), int(self.operands[2])]
+        self.src = list(self.operands[1:])
 
     def execute(self):
-        self.result = global_vars.R.get(self.src[0]) + self.imm
+        self.result = self.operand_vals[0] + self.operand_vals[1]
 
 
 class HALTInstruction(Instruction):
