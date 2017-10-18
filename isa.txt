@@ -1,7 +1,7 @@
-XOR
-HALT
-* WRS
-WR
+- XOR
+- HALT
+- WRS
+- WR
 STORE
 * RD
 BGEZ
@@ -12,7 +12,7 @@ JMP (label)
 JUMP (reg)
 LOAD
 IADDR
-ADDI
+- ADDI
 SUBI
 MULI
 DIVI

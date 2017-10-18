@@ -1,4 +1,4 @@
-import global_vars
+import gv
 from pipeline import *
 
 class ExecUnit:
@@ -7,7 +7,7 @@ class ExecUnit:
         pass
 
     def execute(self):
-        instr = global_vars.pipeline.pipe[Stages["EXECUTE"]]
+        instr = gv.pipeline.pipe[Stages["EXECUTE"]]
 
         if instr:
             instr.evaluate_operands(self.bypassed)

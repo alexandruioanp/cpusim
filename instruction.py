@@ -1,6 +1,6 @@
 import sys
 
-import global_vars
+import gv
 
 def get_instruction(line):
     opcode = line.split(' ')[0]
@@ -8,6 +8,7 @@ def get_instruction(line):
     try:
         i = instruction_types[opcode](line)
     except KeyError:
+        print("Unrecognised instruction", line)
         i = ""
 
     return i
@@ -60,12 +61,12 @@ class Instruction:
             except ValueError:
                 if src == reg:
                     if debug:
-                        print("WILL REPLACE", "R" + str(reg), "with", val)
+                        print("WILL REPLACE REG", str(reg), "with", val)
                     self.operand_vals.append(val)
                 else:
                     if debug:
                         print("Will get from reg")
-                    self.operand_vals.append(global_vars.R.get(int(src[1:])))
+                    self.operand_vals.append(gv.R.get(int(src[1:])))
 
     def execute(self):
         pass
@@ -76,15 +77,12 @@ class Instruction:
 
 class ALUInstruction(Instruction):
     def writeback(self):
-        global_vars.R.set(int(self.dest[1:]), self.result)
+        gv.R.set(int(self.dest[1:]), self.result)
 
 
 class XORInstruction(ALUInstruction):
     def decode(self):
-        # self.dest = int(self.operands[0][1:])
         self.dest = self.operands[0]
-        # self.src = [int(self.operands[1][1:]), int(self.operands[2][1:])]
-        # self.src = [int(self.operands[1][1:]), int(self.operands[2][1:])]
         self.src = list(self.operands[1:])
 
     def execute(self):
@@ -94,27 +92,54 @@ class XORInstruction(ALUInstruction):
 class WRSInstruction(Instruction):
     def decode(self):
         self.src = [int(self.operands[0])]
-        # self.src = list(self.operands)
 
     def execute(self):
-        while global_vars.data_mem[self.operand_vals[0]]:
-            sys.stdout.write(chr(global_vars.data_mem[self.operand_vals[0]])),
+        while gv.data_mem[self.operand_vals[0]]:
+            sys.stdout.write(chr(gv.data_mem[self.operand_vals[0]])),
             self.operand_vals[0] += 1
 
+# STORE R5,R3,0 (src -> dest + offset)
+class STOREInstruction(Instruction):
+    def decode(self):
+        self.src = list(self.operands)
 
+    def execute(self):
+        gv.data_mem[self.operand_vals[1] + self.operand_vals[2]] = self.operand_vals[0]
+
+
+# LOAD R5,R0,8 (src <- dest + offset)
+class LOADInstruction(ALUInstruction):
+    def decode(self):
+        self.dest = self.operands[0]
+        self.src = list(self.operands[1:])
+
+    def execute(self):
+        self.result = gv.data_mem[self.operand_vals[0] + self.operand_vals[1]]
+
+
+# LDI R2,76 (dest = imm)
+class LDIInstruction(ALUInstruction):
+    def decode(self):
+        self.dest = self.operands[0]
+        self.src = list(self.operands[1:])
+
+    def execute(self):
+        self.result = self.operand_vals[0]
+
+
+# WR R5
 class WRInstruction(Instruction):
     def decode(self):
-        # self.src = [int(self.operands[0][1:])]
         self.src = list(self.operands)
 
     def execute(self):
         sys.stdout.write(str(self.operand_vals[0]))
 
 
+# ADDI R6,R1,0 (dest = src + imm)
 class ADDIInstruction(ALUInstruction):
     def decode(self):
         self.dest = self.operands[0]
-        # self.src = [int(self.operands[1][1:]), int(self.operands[2])]
         self.src = list(self.operands[1:])
 
     def execute(self):
@@ -132,7 +157,7 @@ instruction_types = {
         "WRS": WRSInstruction,
         "WR": WRInstruction,
         "HALT": HALTInstruction,
-        # "STORE": STOREInstruction,
+        "STORE": STOREInstruction,
         # "RD": RDInstruction,
         # "BGEZ": BGEZInstruction,
         # "BLTZ": BLTZInstruction,
@@ -140,7 +165,7 @@ instruction_types = {
         # "BNEZ": BNEZInstruction,
         # "JMP": JMPInstruction,
         # "JUMP": JUMPInstruction,
-        # "LOAD": LOADInstruction,
+        "LOAD": LOADInstruction,
         # "IADDR": IADDRInstruction,
         "ADDI": ADDIInstruction,
         # "SUBI": SUBIInstruction,
@@ -150,6 +175,6 @@ instruction_types = {
         # "SUB": SUBInstruction,
         # "MUL": MULInstruction,
         # "DIV": DIVInstruction,
-        # "LDI": LDIInstruction,
+        "LDI": LDIInstruction,
         "NOP": NOPInstruction
     }

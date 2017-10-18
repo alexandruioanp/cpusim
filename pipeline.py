@@ -1,4 +1,4 @@
-import global_vars
+import gv
 
 Stages = {
     "FETCH"     : 0,

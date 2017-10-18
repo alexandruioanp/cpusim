@@ -1,4 +1,4 @@
-import global_vars
+import gv
 from pipeline import *
 
 class WBUnit:
@@ -6,7 +6,7 @@ class WBUnit:
         pass
 
     def writeback(self):
-        instr = global_vars.pipeline.pipe[Stages["WRITEBACK"]]
+        instr = gv.pipeline.pipe[Stages["WRITEBACK"]]
         if instr:
             instr.writeback()
-            global_vars.pipeline.pipe[Stages['WRITEBACK']] = None
+            gv.pipeline.pipe[Stages['WRITEBACK']] = None
