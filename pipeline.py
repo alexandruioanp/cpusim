@@ -17,17 +17,23 @@ class Pipeline:
     def __init__(self):
         self.NUM_STAGES = 4
         self.pipe = [None] * self.NUM_STAGES
+        gv.unit_statuses = ["READY"] * self.NUM_STAGES
 
     def advance(self):
         if self.pipe == [None] * self.NUM_STAGES:
-            return
+            return 2
             # print("no need to advance; pipeline empty")
 
         if self.pipe[-1]:
             # print("instr", self.pipe[-1], "not retired")
             return 1
         else:
-            self.pipe = [None] + self.pipe[:-1]
+            # print(gv.unit_statuses)
+            for i in reversed(range(1, self.NUM_STAGES)):
+                if gv.unit_statuses[i] == "READY" and gv.unit_statuses[i - 1] == "READY":
+                    self.pipe[i] = self.pipe[i - 1]
+                    self.pipe[i - 1] = None
+            # self.pipe = [None] + self.pipe[:-1]
             return 0
 
     def push(self, instr):

@@ -5,7 +5,7 @@ import argparse
 
 from instruction import *
 from fetchunit import *
-from decoder import *
+from decunit import *
 from execution_unit import *
 from writeback_unit import *
 from registerfile import *
@@ -19,16 +19,16 @@ class Computor:
     def __init__(self, program):
         self._program = program
         self.fetchunit = FetchUnit(program)
-        self.decodeunit = Decoder()
+        self.decodeunit = DecUnit()
         self.execunit = ExecUnit()
         self.wbunit = WBUnit()
         gv.R = RegisterFile(10)
         self.clock_cnt = 0
-
+  
     def run_non_pipelined(self):
         for i_list in self.fetchunit.fetch(1):
             if debug:
-                print("START")
+                print("\n\nSTART")
 
             # fetch
             if debug:

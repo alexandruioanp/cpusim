@@ -8,13 +8,17 @@ class ExecUnit:
 
     def execute(self):
         instr = gv.pipeline.pipe[Stages["EXECUTE"]]
+        gv.unit_statuses[Stages["EXECUTE"]] = "BUSY"
 
         if instr:
             instr.evaluate_operands(self.bypassed)
             instr.execute()
             self.bypassed = None
 
-            try:
-                self.bypassed = (instr.dest, instr.result)
-            except AttributeError:
-                pass
+            if gv.enable_forwarding:
+                try:
+                    self.bypassed = (instr.dest, instr.result)
+                except AttributeError:
+                    pass
+
+        gv.unit_statuses[Stages["EXECUTE"]] = "READY"
