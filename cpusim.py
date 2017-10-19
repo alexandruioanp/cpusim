@@ -70,26 +70,29 @@ class Computor:
     def run_pipelined(self):
         last_instr = getNOP()
         while not isinstance(last_instr, HALTInstruction):
-            if debug:
-                print("\n\nSTART")
-
             self.clock_cnt += 1
 
-            self.fetchunit.fetch(1)
             if debug:
-                print("After fetch:", gv.pipeline.pipe, "clk", self.clock_cnt)
+                print("\n\nSTART")
+                print("Before anything:", gv.pipeline.pipe, "clk", self.clock_cnt)
 
-            self.decodeunit.decode()
+
+            last_instr = self.wbunit.writeback()
             if debug:
-                print("After decode:", gv.pipeline.pipe, "clk", self.clock_cnt)
+                print("After writeback:", gv.pipeline.pipe, "clk", self.clock_cnt)
 
             self.execunit.execute()
             if debug:
                 print("After execute:", gv.pipeline.pipe, "clk", self.clock_cnt)
 
-            last_instr = self.wbunit.writeback()
+            self.decodeunit.decode()
             if debug:
-                print("After writeback:", gv.pipeline.pipe, "clk", self.clock_cnt)
+                print("After decode:", gv.pipeline.pipe, "clk", self.clock_cnt)
+
+
+            self.fetchunit.fetch(1)
+            if debug:
+                print("After fetch:", gv.pipeline.pipe, "clk", self.clock_cnt)
 
             gv.pipeline.advance()
 
