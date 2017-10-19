@@ -14,3 +14,6 @@ class WBUnit:
             gv.pipeline.pipe[Stages['WRITEBACK']] = None
 
         gv.unit_statuses[Stages["WRITEBACK"]] = "READY"
+
+        return instr
+

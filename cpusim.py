@@ -22,115 +22,81 @@ class Computor:
         self.decodeunit = DecUnit()
         self.execunit = ExecUnit()
         self.wbunit = WBUnit()
-        gv.R = RegisterFile(10)
+        gv.R = RegisterFile(32)
         self.clock_cnt = 0
-  
+
     def run_non_pipelined(self):
-        for i_list in self.fetchunit.fetch(1):
+        last_instr = getNOP()
+        while not isinstance(last_instr, HALTInstruction):
             if debug:
                 print("\n\nSTART")
 
             # fetch
-            if debug:
-                print(gv.pipeline.pipe, "clk", self.clock_cnt)
-            gv.pipeline.push(i_list[0])
-            gv.pipeline.advance()
+            self.fetchunit.fetch(1)
             self.clock_cnt += 1
-
-            #decode
             if debug:
                 print("After fetch:", gv.pipeline.pipe, "clk", self.clock_cnt)
-            self.decodeunit.decode()
             gv.pipeline.advance()
-            self.clock_cnt += 1
 
-            # execute
+            #decode
+            self.decodeunit.decode()
+            self.clock_cnt += 1
             if debug:
                 print("After decode:", gv.pipeline.pipe, "clk", self.clock_cnt)
-            self.execunit.execute()
             gv.pipeline.advance()
-            self.clock_cnt += 1
 
-            # writeback
+            # execute
+            self.execunit.execute()
+            self.clock_cnt += 1
             if debug:
                 print("After execute:", gv.pipeline.pipe, "clk", self.clock_cnt)
-            self.wbunit.writeback()
             gv.pipeline.advance()
-            self.clock_cnt += 1
 
+            # writeback
+            last_instr = self.wbunit.writeback()
+            self.clock_cnt += 1
             if debug:
                 print("After writeback:", gv.pipeline.pipe, "clk", self.clock_cnt)
+            gv.pipeline.advance()
 
             if debug:
                 print("END")
 
-        # print("Cycles taken:", self.clock_cnt)
+        if debug:
+            print("Cycles taken:", self.clock_cnt)
 
 
     def run_pipelined(self):
-        for i_list in self.fetchunit.fetch(1):
-            # fetch
+        last_instr = getNOP()
+        while not isinstance(last_instr, HALTInstruction):
             if debug:
-                print("START")
+                print("\n\nSTART")
 
-            # fetch
-            if debug:
-                print(gv.pipeline.pipe, "clk", self.clock_cnt)
-            gv.pipeline.push(i_list[0])
             self.clock_cnt += 1
 
-            #decode
+            self.fetchunit.fetch(1)
             if debug:
                 print("After fetch:", gv.pipeline.pipe, "clk", self.clock_cnt)
-            self.decodeunit.decode()
 
-            # execute
+            self.decodeunit.decode()
             if debug:
                 print("After decode:", gv.pipeline.pipe, "clk", self.clock_cnt)
-            self.execunit.execute()
 
-            # writeback
+            self.execunit.execute()
             if debug:
                 print("After execute:", gv.pipeline.pipe, "clk", self.clock_cnt)
-            self.wbunit.writeback()
-            gv.pipeline.advance()
 
+            last_instr = self.wbunit.writeback()
             if debug:
                 print("After writeback:", gv.pipeline.pipe, "clk", self.clock_cnt)
+
+            gv.pipeline.advance()
 
             if debug:
                 print("END")
 
-        #
-        self.decodeunit.decode()
-        self.execunit.execute()
         if debug:
-            print("Before flush 1:", gv.pipeline.pipe, "clk", self.clock_cnt)
-        self.wbunit.writeback()
-        self.clock_cnt += 1
-
-        #
-        gv.pipeline.advance()
-        self.decodeunit.decode()
-        self.execunit.execute()
-        if debug:
-            print("Before lush 2:", gv.pipeline.pipe, "clk", self.clock_cnt)
-        self.wbunit.writeback()
-        self.clock_cnt += 1
-
-        #
-        gv.pipeline.advance()
-        self.decodeunit.decode()
-        self.execunit.execute()
-        if debug:
-            print("Before flush 3:", gv.pipeline.pipe, "clk", self.clock_cnt)
-        self.wbunit.writeback()
-        self.clock_cnt += 1
-
-        if debug:
-            print("After flush 3:", gv.pipeline.pipe, "clk", self.clock_cnt)
-
-        # print("Cycles taken:", self.clock_cnt)
+            print("Cycles taken:", self.clock_cnt)
 
 def assemble(asm, program):
     label_targets = {}
@@ -165,7 +131,7 @@ def assemble(asm, program):
             dest_reg, label = line.split(' ')[1].split(',')
             line = "LDI " + dest_reg + "," + str(label_targets[label])
 
-        if 'DATA' not in line and ":" not in line and 'HALT' not in line:
+        if 'DATA' not in line and ":" not in line:
             instr = get_instruction(line)
             program.append(instr)
 

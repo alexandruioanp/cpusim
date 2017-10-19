@@ -14,7 +14,7 @@ def get_instruction(line):
     return i
 
 def getNOP():
-    return NOPInstruction()
+    return NOPInstruction("")
 
 debug = True
 debug = False
@@ -75,12 +75,12 @@ class Instruction:
         pass
 
 
-class ALUInstruction(Instruction):
+class WRITEBACKInstruction(Instruction):
     def writeback(self):
         gv.R.set(int(self.dest[1:]), self.result)
 
 
-class XORInstruction(ALUInstruction):
+class XORInstruction(WRITEBACKInstruction):
     def decode(self):
         self.dest = self.operands[0]
         self.src = list(self.operands[1:])
@@ -108,7 +108,7 @@ class STOREInstruction(Instruction):
 
 
 # LOAD R5,R0,8 (src <- dest + offset)
-class LOADInstruction(ALUInstruction):
+class LOADInstruction(WRITEBACKInstruction):
     def decode(self):
         self.dest = self.operands[0]
         self.src = list(self.operands[1:])
@@ -118,7 +118,7 @@ class LOADInstruction(ALUInstruction):
 
 
 # LDI R2,76 (dest = imm)
-class LDIInstruction(ALUInstruction):
+class LDIInstruction(WRITEBACKInstruction):
     def decode(self):
         self.dest = self.operands[0]
         self.src = list(self.operands[1:])
@@ -136,8 +136,18 @@ class WRInstruction(Instruction):
         sys.stdout.write(str(self.operand_vals[0]))
 
 
-# ADDI R6,R1,0 (dest = src + imm)
-class ADDIInstruction(ALUInstruction):
+# SUBI R6,R1,0 (dest = src - imm) /// SUB R5,R2,R0 (dest = src1 - src2)
+class SUBInstruction(WRITEBACKInstruction):
+    def decode(self):
+        self.dest = self.operands[0]
+        self.src = list(self.operands[1:])
+
+    def execute(self):
+        self.result = self.operand_vals[0] - self.operand_vals[1]
+
+
+# ADDI R6,R1,0 (dest = src + imm) /// ADD R6,R1,R2 (dest = src1 + src2)
+class ADDInstruction(WRITEBACKInstruction):
     def decode(self):
         self.dest = self.operands[0]
         self.src = list(self.operands[1:])
@@ -166,13 +176,12 @@ instruction_types = {
         # "JMP": JMPInstruction,
         # "JUMP": JUMPInstruction,
         "LOAD": LOADInstruction,
-        # "IADDR": IADDRInstruction,
-        "ADDI": ADDIInstruction,
-        # "SUBI": SUBIInstruction,
+        "ADDI": ADDInstruction,
+        "SUBI": SUBInstruction,
         # "MULI": MULIInstruction,
         # "DIVI": DIVIInstruction,
-        # "ADD": ADDInstruction,
-        # "SUB": SUBInstruction,
+        "ADD": ADDInstruction,
+        "SUB": SUBInstruction,
         # "MUL": MULInstruction,
         # "DIV": DIVInstruction,
         "LDI": LDIInstruction,
