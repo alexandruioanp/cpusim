@@ -48,9 +48,9 @@ class TestSim(unittest.TestCase):
         cmd_out, expected_out = test_generic("test6")
         self.assertEqual(cmd_out, expected_out)
 
-    def test7(self):
-        cmd_out, expected_out = test_generic("test7")
-        self.assertEqual(cmd_out, expected_out)
+    # def test7(self):
+    #     cmd_out, expected_out = test_generic("test7")
+    #     self.assertEqual(cmd_out, expected_out)
 
     def testsk(self):
         cmd_out, expected_out = test_generic("testsk")
@@ -58,6 +58,10 @@ class TestSim(unittest.TestCase):
 
     def testsk_no_haz(self):
         cmd_out, expected_out = test_generic("testsk-no-haz")
+        self.assertEqual(cmd_out, expected_out)
+
+    def testjmp(self):
+        cmd_out, expected_out = test_generic("testjmp")
         self.assertEqual(cmd_out, expected_out)
 
     # pipelined
@@ -82,9 +86,9 @@ class TestSim(unittest.TestCase):
         cmd_out, expected_out = test_generic("test6", 1)
         self.assertEqual(cmd_out, expected_out)
 
-    def test7_pipe(self):
-        cmd_out, expected_out = test_generic("test7", 1)
-        self.assertEqual(cmd_out, expected_out)
+    # def test7_pipe(self):
+    #     cmd_out, expected_out = test_generic("test7", 1)
+    #     self.assertEqual(cmd_out, expected_out)
 
     def testsk_pipe(self):
         cmd_out, expected_out = test_generic("testsk", 1)
@@ -92,6 +96,10 @@ class TestSim(unittest.TestCase):
 
     def testsk_no_haz_pipe(self):
         cmd_out, expected_out = test_generic("testsk-no-haz", 1)
+        self.assertEqual(cmd_out, expected_out)
+
+    def testjmp_p(self):
+        cmd_out, expected_out = test_generic("testjmp", 1)
         self.assertEqual(cmd_out, expected_out)
 
 if __name__ == '__main__':

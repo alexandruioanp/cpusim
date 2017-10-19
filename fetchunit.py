@@ -1,16 +1,22 @@
 import gv
 from pipeline import *
+import instruction
 
 class FetchUnit:
     def __init__(self, istream):
-        self.instruction_ptr = 0
+        self.pc = 0
         self.instruction_stream = istream
+
+    def jump(self, target):
+        # print("FETCH: jumping to", target)
+        self.pc = target
+        # gv.pipeline.pipe[Stages["FETCH"]] = instruction.getNOP()
 
     def fetch(self, num):
         gv.unit_statuses[Stages["FETCH"]] = "BUSY"
 
-        instr = self.instruction_stream[self.instruction_ptr:self.instruction_ptr + num]
-        self.instruction_ptr += num
+        instr = self.instruction_stream[self.pc:self.pc + num]
+        self.pc += num
 
         if instr:
             gv.pipeline.push(instr[0])
@@ -20,9 +26,9 @@ class FetchUnit:
         return instr
 
     def get_from_stream(self, num):
-        while self.instruction_ptr < len(self.instruction_stream):
+        while self.pc < len(self.instruction_stream):
 
-            instr = self.instruction_stream[self.instruction_ptr:self.instruction_ptr + num]
-            self.instruction_ptr += num
+            instr = self.instruction_stream[self.pc:self.pc + num]
+            self.pc += num
 
             yield instr

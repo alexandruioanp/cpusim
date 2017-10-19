@@ -1,5 +1,6 @@
 import gv
 from pipeline import *
+import instruction
 
 class DecUnit:
     def decode(self):
@@ -8,6 +9,12 @@ class DecUnit:
 
         if instr:
             instr.decode()
+
+            # check for jump?
+            if instr.isUncondBranch:
+                gv.fu.jump(instr.target)
+                gv.pipeline.pipe[Stages["DECODE"]] = instruction.getNOP()
+
 
         # check for hazard? -- ??
         # if hazard

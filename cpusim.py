@@ -15,10 +15,12 @@ import gv
 debug = True
 debug = False
 
+
 class Computor:
     def __init__(self, program):
         self._program = program
         self.fetchunit = FetchUnit(program)
+        gv.fu = self.fetchunit
         self.decodeunit = DecUnit()
         self.execunit = ExecUnit()
         self.wbunit = WBUnit()
@@ -38,7 +40,7 @@ class Computor:
                 print("After fetch:", gv.pipeline.pipe, "clk", self.clock_cnt)
             gv.pipeline.advance()
 
-            #decode
+            # decode
             self.decodeunit.decode()
             self.clock_cnt += 1
             if debug:
@@ -64,7 +66,6 @@ class Computor:
 
         if debug:
             print("Cycles taken:", self.clock_cnt)
-
 
     def run_pipelined(self):
         last_instr = getNOP()
@@ -97,6 +98,7 @@ class Computor:
 
         if debug:
             print("Cycles taken:", self.clock_cnt)
+
 
 def assemble(asm, program):
     label_targets = {}
@@ -150,6 +152,7 @@ def print_data_mem():
         # else:
         #     print word,
 
+
 def main(args):
     input_filename = args.file
 
@@ -166,6 +169,7 @@ def main(args):
 
     # if debug:
     # print_data_mem()
+
 
 if __name__ == '__main__':
 

@@ -26,6 +26,11 @@ class Instruction:
     def __init__(self, asm):
         comps = asm.split(' ')
         self.opcode = comps[0]
+
+        self.isBranch = True if self.opcode in ["BGEZ", "BLTZ", "BEQZ", "BNEZ", "JMP", "JUMP"] else False
+        self.isUncondBranch = True if self.opcode in ["JMP", "JUMP"] else False
+        self.isCondBranch = not self.isUncondBranch
+
         if len(comps) > 1:
             self.operands = comps[1]
             self.operands = self.operands.split(',')
@@ -73,6 +78,18 @@ class Instruction:
 
     def writeback(self):
         pass
+
+
+class BRANCHInstruction(Instruction):
+    pass
+
+class JMPInstruction(BRANCHInstruction):
+    def decode(self):
+        self.target = int(self.operands[0])
+        self.isUncondBr = True
+
+    def execute(self):
+        print("EXECUTED")
 
 
 class WRITEBACKInstruction(Instruction):
@@ -162,6 +179,7 @@ class HALTInstruction(Instruction):
 class NOPInstruction(Instruction):
     pass
 
+
 instruction_types = {
         "XOR": XORInstruction,
         "WRS": WRSInstruction,
@@ -173,7 +191,7 @@ instruction_types = {
         # "BLTZ": BLTZInstruction,
         # "BEQZ": BEQZInstruction,
         # "BNEZ": BNEZInstruction,
-        # "JMP": JMPInstruction,
+        "JMP": JMPInstruction,
         # "JUMP": JUMPInstruction,
         "LOAD": LOADInstruction,
         "ADDI": ADDInstruction,

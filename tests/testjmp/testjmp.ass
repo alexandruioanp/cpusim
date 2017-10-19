@@ -1,0 +1,13 @@
+XOR R0,R0,R0    ; 0
+XOR R1,R1,R1    ; 1
+LDI R2,11       ; 2
+WR R2           ; 3
+WRS 0           ; 4
+JMP L1          ; 5
+ADDI R2,R2,44   ; 6
+WR R2           ; 7
+WRS 0           ; 8
+L1:
+HALT            ; 9
+DATA 10 ;
+DATA 0 ;

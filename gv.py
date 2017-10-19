@@ -1,4 +1,5 @@
 R = None
+pipeline = None
 data_mem = []
 unit_statuses = []
 enable_forwarding = True
