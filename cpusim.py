@@ -129,8 +129,14 @@ def assemble(asm, program):
     for i in range(len(asm)):
         line = asm[i].strip()
 
-        if 'JMP' in line:
+        opcode = line.split(' ')[0]
+
+        if opcode == 'JMP':
             line = "JMP " + str(label_targets[line.split(' ')[1]])
+
+        if opcode in ['BGEZ', 'BNEZ', 'BLTZ', 'BEQZ']:
+            operands = line.split(' ')[1]
+            line = opcode + " " + operands .split(',')[0] + "," + str(label_targets[operands .split(',')[1]])
 
         if 'IADDR' in line:
             dest_reg, label = line.split(' ')[1].split(',')

@@ -1,4 +1,5 @@
 import sys
+import operator
 
 import gv
 
@@ -83,13 +84,38 @@ class Instruction:
 class BRANCHInstruction(Instruction):
     pass
 
+
 class JMPInstruction(BRANCHInstruction):
     def decode(self):
         self.target = int(self.operands[0])
-        self.isUncondBr = True
 
     def execute(self):
-        print("EXECUTED")
+        print("EXECUTED JMP")
+
+
+class CONDBRANCHInstruction(BRANCHInstruction):
+    def decode(self):
+        self.src = [self.operands[0]]
+        self.target = int(self.operands[1])
+
+        if self.opcode == "BGEZ":
+            self.operator = operator.ge
+        elif self.opcode == "BLTZ":
+            self.operator = operator.lt
+        elif self.opcode == "BEQZ":
+            self.operator = operator.eq
+        elif self.opcode == "BNEZ":
+            self.operator = operator.ne
+
+    def execute(self):
+        # print("EXECUTED", self.opcode)
+
+        if self.operator(self.operand_vals[0], 0):
+            # print("YES")
+            gv.fu.jump(self.target)
+        else:
+            # print("NO")
+            pass
 
 
 class WRITEBACKInstruction(Instruction):
@@ -114,6 +140,7 @@ class WRSInstruction(Instruction):
         while gv.data_mem[self.operand_vals[0]]:
             sys.stdout.write(chr(gv.data_mem[self.operand_vals[0]])),
             self.operand_vals[0] += 1
+
 
 # STORE R5,R3,0 (src -> dest + offset)
 class STOREInstruction(Instruction):
@@ -187,10 +214,10 @@ instruction_types = {
         "HALT": HALTInstruction,
         "STORE": STOREInstruction,
         # "RD": RDInstruction,
-        # "BGEZ": BGEZInstruction,
-        # "BLTZ": BLTZInstruction,
-        # "BEQZ": BEQZInstruction,
-        # "BNEZ": BNEZInstruction,
+        "BGEZ": CONDBRANCHInstruction,
+        "BLTZ": CONDBRANCHInstruction,
+        "BEQZ": CONDBRANCHInstruction,
+        "BNEZ": CONDBRANCHInstruction,
         "JMP": JMPInstruction,
         # "JUMP": JUMPInstruction,
         "LOAD": LOADInstruction,

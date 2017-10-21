@@ -48,6 +48,7 @@ class TestSim(unittest.TestCase):
         cmd_out, expected_out = test_generic("test6")
         self.assertEqual(cmd_out, expected_out)
 
+    # infinite loop currently
     # def test7(self):
     #     cmd_out, expected_out = test_generic("test7")
     #     self.assertEqual(cmd_out, expected_out)
@@ -63,7 +64,16 @@ class TestSim(unittest.TestCase):
     def testjmp(self):
         cmd_out, expected_out = test_generic("testjmp")
         self.assertEqual(cmd_out, expected_out)
+    #
+    # def testisort10(self):
+    #     cmd_out, expected_out = test_generic("insertion-sort-10")
+    #     self.assertEqual(cmd_out, expected_out)
+    #
+    # def testisort100(self):
+    #     cmd_out, expected_out = test_generic("insertion-sort-100")
+    #     self.assertEqual(cmd_out, expected_out)
 
+    ###############################################################################################
     # pipelined
     def test1_pipe(self):
         cmd_out, expected_out = test_generic("test1", 1)
@@ -86,6 +96,7 @@ class TestSim(unittest.TestCase):
         cmd_out, expected_out = test_generic("test6", 1)
         self.assertEqual(cmd_out, expected_out)
 
+    # infinite loop currently
     # def test7_pipe(self):
     #     cmd_out, expected_out = test_generic("test7", 1)
     #     self.assertEqual(cmd_out, expected_out)
@@ -101,6 +112,14 @@ class TestSim(unittest.TestCase):
     def testjmp_p(self):
         cmd_out, expected_out = test_generic("testjmp", 1)
         self.assertEqual(cmd_out, expected_out)
+
+    # def testisort10_p(self):
+    #     cmd_out, expected_out = test_generic("insertion-sort-10", 1)
+    #     self.assertEqual(cmd_out, expected_out)
+    #
+    # def testisort100_p(self):
+    #     cmd_out, expected_out = test_generic("insertion-sort-100", 1)
+    #     self.assertEqual(cmd_out, expected_out)
 
 if __name__ == '__main__':
     unittest.main(verbosity=2)
