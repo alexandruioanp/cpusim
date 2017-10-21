@@ -1,5 +1,4 @@
-Factorial calculator
-Enter number: Factorial of 5 is 120
+Factorial of 12 is 479001600
 
 Exponential calculator
-Enter base: Enter exponent: 4 raised to the power of 10 is 1048576
+Enter exponent: 99 raised to the power of 5 is 919965907

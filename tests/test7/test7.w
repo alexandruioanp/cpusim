@@ -1,9 +1,7 @@
 {COMS22201 test7: program to test all language features.}
 {Already tested: write statements, constants, variables, assignment, read statements, if statements, while loops, arithmetic expressions, boolean expressions.}
 
-write('Factorial calculator'); writeln;
-write('Enter number: ');
-read(x);
+x := 12;
 write('Factorial of '); write(x); write(' is ');
 y := 1;
 while !(x=1) do (
@@ -15,11 +13,10 @@ writeln;
 writeln;
 
 write('Exponential calculator'); writeln;
-write('Enter base: ');
-read(base);
+base := 99;
 if 1 <= base then (
   write('Enter exponent: ');
-  read(exponent);
+  exponent := 5;
   num := 1;
   count := exponent;
   while 1 <= count do (

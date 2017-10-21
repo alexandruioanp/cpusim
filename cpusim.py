@@ -114,8 +114,6 @@ def assemble(asm, program):
     addr = 0
     num_labels = 0
 
-    # gv.data_mem.append(0)
-
     for line_no in range(len(asm)):
         line = asm[line_no].strip()
         if ':' in line and "DATA" not in line:

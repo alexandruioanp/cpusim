@@ -30,7 +30,7 @@ class Instruction:
         self.opcode = comps[0]
 
         self.isBranch = True if self.opcode in ["BGEZ", "BLTZ", "BEQZ", "BNEZ", "JMP", "JUMP"] else False
-        self.isUncondBranch = True if self.opcode in ["JMP", "JUMP"] else False
+        self.isUncondBranch = True if self.opcode in ["JMP"] else False # , "JUMP"
         self.isCondBranch = not self.isUncondBranch
 
         if len(comps) > 1:
@@ -93,7 +93,15 @@ class JMPInstruction(BRANCHInstruction):
         self.target = int(self.operands[0])
 
     def execute(self):
-        print("EXECUTED JMP")
+        print("PROBLEM? EXECUTED JMP")
+
+
+class JUMPInstruction(BRANCHInstruction):
+    def decode(self):
+        self.src = [self.operands[0]]
+
+    def execute(self):
+        gv.fu.jump(self.operand_vals[0])
 
 
 class CONDBRANCHInstruction(BRANCHInstruction):
@@ -260,7 +268,7 @@ instruction_types = {
         "BEQZ": CONDBRANCHInstruction,
         "BNEZ": CONDBRANCHInstruction,
         "JMP": JMPInstruction,
-        # "JUMP": JUMPInstruction,
+        "JUMP": JUMPInstruction,
         "LOAD": LOADInstruction,
         "ADDI": ADDInstruction,
         "SUBI": SUBInstruction,

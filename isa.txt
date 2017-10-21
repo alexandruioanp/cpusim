@@ -12,7 +12,7 @@ JMP (label)
 JUMP (reg)
 LOAD
 IADDR
-- ADDI
+ADDI
 SUBI
 MULI
 DIVI
