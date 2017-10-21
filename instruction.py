@@ -2,6 +2,7 @@ import sys
 import operator
 
 import gv
+from pipeline import *
 
 def get_instruction(line):
     opcode = line.split(' ')[0]
@@ -15,7 +16,7 @@ def get_instruction(line):
     return i
 
 def getNOP():
-    return NOPInstruction("")
+    return NOPInstruction("NOP")
 
 debug = True
 debug = False
@@ -53,7 +54,9 @@ class Instruction:
             reg = val = -1
 
         if debug:
-            print(str(self))
+            print "Evaluating", str(self)
+
+        self.operand_vals = []
 
         for idx, src in enumerate(self.src):
             if debug:
@@ -108,18 +111,21 @@ class CONDBRANCHInstruction(BRANCHInstruction):
             self.operator = operator.ne
 
     def execute(self):
-        # print("EXECUTED", self.opcode)
-
         if self.operator(self.operand_vals[0], 0):
-            # print("YES")
             gv.fu.jump(self.target)
+
+            if gv.is_pipelined:
+                gv.pipeline.pipe[Stages["DECODE"]] = getNOP()
         else:
-            # print("NO")
             pass
 
 
 class WRITEBACKInstruction(Instruction):
     def writeback(self):
+
+        if debug:
+            print("WRITING", str(self))
+            print(self.dest)
         gv.R.set(int(self.dest[1:]), self.result)
 
 
@@ -148,7 +154,15 @@ class STOREInstruction(Instruction):
         self.src = list(self.operands)
 
     def execute(self):
-        gv.data_mem[self.operand_vals[1] + self.operand_vals[2]] = self.operand_vals[0]
+        a = self.operand_vals[0] & 0xFF
+        b = (self.operand_vals[0] >> 8)  & 0xFF
+        c = (self.operand_vals[0] >> 16) & 0xFF
+        d = (self.operand_vals[0] >> 24) & 0xFF
+
+        gv.data_mem[self.operand_vals[1] + self.operand_vals[2] + 0] = a
+        gv.data_mem[self.operand_vals[1] + self.operand_vals[2] + 1] = b
+        gv.data_mem[self.operand_vals[1] + self.operand_vals[2] + 2] = c
+        gv.data_mem[self.operand_vals[1] + self.operand_vals[2] + 3] = d
 
 
 # LOAD R5,R0,8 (src <- dest + offset)
@@ -158,10 +172,15 @@ class LOADInstruction(WRITEBACKInstruction):
         self.src = list(self.operands[1:])
 
     def execute(self):
-        self.result = gv.data_mem[self.operand_vals[0] + self.operand_vals[1]]
+        self.result = 0
+        a = gv.data_mem[self.operand_vals[0] + self.operand_vals[1] + 0]
+        b = gv.data_mem[self.operand_vals[0] + self.operand_vals[1] + 1]
+        c = gv.data_mem[self.operand_vals[0] + self.operand_vals[1] + 2]
+        d = gv.data_mem[self.operand_vals[0] + self.operand_vals[1] + 3]
+        self.result = a + (b << 8) + (c << 16) + (d << 24)
 
 
-# LDI R2,76 (dest = imm)
+    # LDI R2,76 (dest = imm)
 class LDIInstruction(WRITEBACKInstruction):
     def decode(self):
         self.dest = self.operands[0]
@@ -200,6 +219,28 @@ class ADDInstruction(WRITEBACKInstruction):
         self.result = self.operand_vals[0] + self.operand_vals[1]
 
 
+# ADDI R6,R1,0 (dest = src + imm) /// ADD R6,R1,R2 (dest = src1 + src2)
+class MULInstruction(WRITEBACKInstruction):
+    def decode(self):
+        self.dest = self.operands[0]
+        self.src = list(self.operands[1:])
+
+    def execute(self):
+        self.result = self.operand_vals[0] * self.operand_vals[1]
+
+
+
+# ADDI R6,R1,0 (dest = src + imm) /// ADD R6,R1,R2 (dest = src1 + src2)
+class DIVInstruction(WRITEBACKInstruction):
+    def decode(self):
+        self.dest = self.operands[0]
+        self.src = list(self.operands[1:])
+
+    def execute(self):
+        self.result = self.operand_vals[0] / self.operand_vals[1]
+
+
+
 class HALTInstruction(Instruction):
     pass
 
@@ -223,12 +264,12 @@ instruction_types = {
         "LOAD": LOADInstruction,
         "ADDI": ADDInstruction,
         "SUBI": SUBInstruction,
-        # "MULI": MULIInstruction,
-        # "DIVI": DIVIInstruction,
+        "MULI": MULInstruction,
+        "DIVI": DIVInstruction,
         "ADD": ADDInstruction,
         "SUB": SUBInstruction,
-        # "MUL": MULInstruction,
-        # "DIV": DIVInstruction,
+        "MUL": MULInstruction,
+        "DIV": DIVInstruction,
         "LDI": LDIInstruction,
         "NOP": NOPInstruction
     }

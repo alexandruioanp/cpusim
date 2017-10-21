@@ -28,79 +28,84 @@ class Computor:
         self.clock_cnt = 0
 
     def run_non_pipelined(self):
+        if debug:
+            print("RUNNING NON-PIPELINED")
         last_instr = getNOP()
         while not isinstance(last_instr, HALTInstruction):
             if debug:
                 print("\n\nSTART")
-
+                print("Before anything:", str(gv.pipeline), "clk", self.clock_cnt)
             # fetch
             self.fetchunit.fetch(1)
             self.clock_cnt += 1
             if debug:
-                print("After fetch:", gv.pipeline.pipe, "clk", self.clock_cnt)
+                print("After fetch:", str(gv.pipeline), "clk", self.clock_cnt)
             gv.pipeline.advance()
 
             # decode
             self.decodeunit.decode()
             self.clock_cnt += 1
             if debug:
-                print("After decode:", gv.pipeline.pipe, "clk", self.clock_cnt)
+                print("After decode:", str(gv.pipeline), "clk", self.clock_cnt)
             gv.pipeline.advance()
 
             # execute
             self.execunit.execute()
             self.clock_cnt += 1
             if debug:
-                print("After execute:", gv.pipeline.pipe, "clk", self.clock_cnt)
+                print("After execute:", str(gv.pipeline), "clk", self.clock_cnt)
             gv.pipeline.advance()
 
             # writeback
+            if debug:
+                print("Before writeback:", str(gv.pipeline), "clk", self.clock_cnt)
             last_instr = self.wbunit.writeback()
             self.clock_cnt += 1
             if debug:
-                print("After writeback:", gv.pipeline.pipe, "clk", self.clock_cnt)
+                print("After writeback:", str(gv.pipeline), "clk", self.clock_cnt)
             gv.pipeline.advance()
 
             if debug:
                 print("END")
 
-        if debug:
-            print("Cycles taken:", self.clock_cnt)
+        # if debug:
+        # print("Cycles taken:", self.clock_cnt)
 
     def run_pipelined(self):
+        if debug:
+            print("RUNNING PIPELINED")
         last_instr = getNOP()
         while not isinstance(last_instr, HALTInstruction):
             self.clock_cnt += 1
 
             if debug:
                 print("\n\nSTART")
-                print("Before anything:", gv.pipeline.pipe, "clk", self.clock_cnt)
-
+                print("Before anything:", str(gv.pipeline), "clk", self.clock_cnt)
 
             last_instr = self.wbunit.writeback()
             if debug:
-                print("After writeback:", gv.pipeline.pipe, "clk", self.clock_cnt)
+                print("After writeback:", str(gv.pipeline), "clk", self.clock_cnt)
 
             self.execunit.execute()
             if debug:
-                print("After execute:", gv.pipeline.pipe, "clk", self.clock_cnt)
+                print("After execute:", str(gv.pipeline), "clk", self.clock_cnt)
 
             self.decodeunit.decode()
             if debug:
-                print("After decode:", gv.pipeline.pipe, "clk", self.clock_cnt)
+                print("After decode:", str(gv.pipeline), "clk", self.clock_cnt)
 
 
             self.fetchunit.fetch(1)
             if debug:
-                print("After fetch:", gv.pipeline.pipe, "clk", self.clock_cnt)
+                print("After fetch:", str(gv.pipeline), "clk", self.clock_cnt)
 
             gv.pipeline.advance()
 
             if debug:
                 print("END")
-
-        if debug:
-            print("Cycles taken:", self.clock_cnt)
+        #
+        # if debug:
+        # print("Cycles taken:", self.clock_cnt)
 
 
 def assemble(asm, program):
@@ -174,7 +179,12 @@ def main(args):
     gv.pipeline = Pipeline()
     pc3000 = Computor(program)
 
-    pc3000.run_pipelined() if args.pipelined else pc3000.run_non_pipelined()
+    if args.pipelined:
+        gv.is_pipelined = True
+        pc3000.run_pipelined()
+    else:
+        gv.is_pipelined = False
+        pc3000.run_non_pipelined()
 
     # if debug:
     # print_data_mem()

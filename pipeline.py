@@ -1,11 +1,12 @@
+import collections
+
 import gv
 
-Stages = {
-    "FETCH"     : 0,
-    "DECODE"    : 1,
-    "EXECUTE"   : 2,
-    "WRITEBACK" : 3
-}
+Stages = collections.OrderedDict([
+        ("FETCH", 0),
+        ("DECODE", 1),
+        ("EXECUTE", 2),
+        ("WRITEBACK", 3)])
 
 State = {
     "OK":     0,
@@ -18,6 +19,14 @@ class Pipeline:
         self.NUM_STAGES = 4
         self.pipe = [None] * self.NUM_STAGES
         gv.unit_statuses = ["READY"] * self.NUM_STAGES
+
+    def __str__(self):
+        string = ""
+        for idx, instr in enumerate(self.pipe):
+            string += "("  + Stages.keys()[idx][0] + ": " + str(instr) + ") "
+
+        return string
+        # return self.opcode + " " + str(self.operands)
 
     def advance(self):
         if self.pipe == [None] * self.NUM_STAGES:
@@ -42,5 +51,3 @@ class Pipeline:
         else:
             self.pipe[0] = instr
 
-    def stall(self, stage):
-        pass

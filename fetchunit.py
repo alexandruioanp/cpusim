@@ -8,9 +8,7 @@ class FetchUnit:
         self.instruction_stream = istream
 
     def jump(self, target):
-        # print("FETCH: jumping to", target)
         self.pc = target
-        # gv.pipeline.pipe[Stages["FETCH"]] = instruction.getNOP()
 
     def fetch(self, num):
         gv.unit_statuses[Stages["FETCH"]] = "BUSY"
