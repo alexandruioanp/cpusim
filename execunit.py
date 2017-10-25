@@ -2,9 +2,15 @@ import gv
 from pipeline import *
 
 class ExecUnit:
-    def __init__(self):
+    def __init__(self, env):
+        self.env = env
         self.bypassed = None
-        pass
+        # gv.stages.append(self)
+
+    def do(self):
+        # print("exec")
+        self.execute()
+        yield self.env.process(gv.pipeline.get_prev("EXECUTE").do())
 
     def execute(self):
         instr = gv.pipeline.pipe[Stages["EXECUTE"]]

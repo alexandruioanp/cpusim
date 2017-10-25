@@ -26,7 +26,26 @@ class Pipeline:
             string += "("  + list(Stages.keys())[idx][0] + ": " + str(instr) + ") "
 
         return string
-        # return self.opcode + " " + str(self.operands)
+
+    def get_prev_idx(self, name):
+        idx = Stages[name]
+        if idx == 0:
+            return len(Stages.keys()) - 1
+        else:
+            return idx - 1
+
+    def get_prev(self, name):
+        return gv.stages[self.get_prev_idx(name)]
+
+    def get_next_idx(self, name):
+        idx = Stages[name]
+        if idx == len(Stages.keys()) - 1:
+            return 0
+        else:
+            return idx + 1
+
+    def get_next(self, name):
+        return gv.stages[self.get_next_idx(name)]
 
     def advance(self):
         if self.pipe == [None] * self.NUM_STAGES:
@@ -48,6 +67,8 @@ class Pipeline:
     def push(self, instr):
         if self.pipe[0]:
             print("slot 0 not empty", self.pipe[0])
+            return 1
         else:
             self.pipe[0] = instr
+            return 0
 

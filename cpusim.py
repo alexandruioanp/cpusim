@@ -3,11 +3,13 @@
 import re
 import argparse
 
+import simpy
+
 from instruction import *
 from fetchunit import *
 from decunit import *
-from execution_unit import *
-from writeback_unit import *
+from execunit import *
+from wbunit import *
 from registerfile import *
 from pipeline import *
 import gv
@@ -16,15 +18,26 @@ debug = True
 debug = False
 
 class Computor:
-    def __init__(self, program):
+    def __init__(self, program, env):
         self._program = program
-        self.fetchunit = FetchUnit(program)
+        self.env = env
+        self.fetchunit = FetchUnit(program, self.env)
         gv.fu = self.fetchunit
-        self.decodeunit = DecUnit()
-        self.execunit = ExecUnit()
-        self.wbunit = WBUnit()
+        self.decodeunit = DecUnit(self.env)
+        self.execunit = ExecUnit(self.env)
+        self.wbunit = WBUnit(self.env)
         gv.R = RegisterFile(48)
         self.clock_cnt = 0
+        gv.stages = [self.fetchunit, self.decodeunit, self.execunit, self.wbunit]
+
+    def run_simpy(self):
+        while True:
+            # print(self.env.now)
+            yield self.env.process(gv.stages[-1].do()) # writeback
+            if gv.pipeline.advance() == 2:
+                break
+            yield self.env.timeout(1)
+
 
     def run_non_pipelined(self):
         if debug:
@@ -38,7 +51,7 @@ class Computor:
             self.fetchunit.fetch(1)
             self.clock_cnt += 1
             if debug:
-                print("After fetch:", str(gv.pipeline), "clk", self.clock_cnt)
+                print("After fetch:", str(gv.pipeline), "clk", self.clock_cnt, "now", self.env.now)
             gv.pipeline.advance()
 
             # decode
@@ -174,24 +187,40 @@ def main(args):
     assemble(asm, program)
 
     gv.pipeline = Pipeline()
-    pc3000 = Computor(program)
+    env = simpy.Environment()
+    pc3000 = Computor(program, env)
 
     if args.pipelined:
         gv.is_pipelined = True
-        pc3000.run_pipelined()
+        if args.simpy:
+            pass
+        else:
+            pc3000.run_pipelined()
     else:
         gv.is_pipelined = False
-        pc3000.run_non_pipelined()
+        if args.simpy:
+            env.process(pc3000.run_simpy())
+        else:
+            pc3000.run_non_pipelined()
 
+    env.run()
+
+    if debug:
+        if args.simpy:
+            print("CLK SimPY:", env.now)
+        else:
+            print("")
     # if debug:
     # print_data_mem()
 
 
 if __name__ == '__main__':
-
     parser = argparse.ArgumentParser()
     parser.add_argument('--file', required=True, help='Input .ass file')
-    parser.add_argument('--pipelined', required=False, default=0, type=int, choices={0, 1}, help='Run in pipelined mode?')
+    parser.add_argument('--pipelined', required=False, default=0, type=int, choices={0, 1},
+                        help='Run in pipelined mode?')
+    parser.add_argument('--simpy', required=False, default=0, type=int, choices={0, 1},
+                        help='Run using simpy?')
 
     args = parser.parse_args()
 

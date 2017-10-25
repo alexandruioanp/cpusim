@@ -1,6 +1,8 @@
 import sys
 import operator
 
+import simpy
+
 import gv
 from pipeline import *
 
@@ -41,6 +43,7 @@ class Instruction:
         self.operand_vals = []
         self.src = []
         self.dest = []
+        self.duration = 1
 
     def decode(self):
         pass
@@ -86,6 +89,12 @@ class Instruction:
 
 class BRANCHInstruction(Instruction):
     pass
+
+
+class MEMInstruction(Instruction):
+    def __init__(self, *args, **kwargs):
+        super(MEMInstruction, self).__init__(*args, **kwargs)
+        self.duration = 5
 
 
 class JMPInstruction(BRANCHInstruction):
@@ -157,7 +166,7 @@ class WRSInstruction(Instruction):
 
 
 # STORE R5,R3,0 (src -> dest + offset)
-class STOREInstruction(Instruction):
+class STOREInstruction(MEMInstruction):
     def decode(self):
         self.src = list(self.operands)
 

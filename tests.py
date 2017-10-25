@@ -2,8 +2,8 @@ import unittest
 from subprocess import Popen, PIPE, STDOUT
 import os
 
-def test_generic(test_name, pipelined=0):
-    p = Popen(['python', 'cpusim.py', "--file", os.path.join("tests", test_name, test_name + ".ass"), "--pipelined", str(pipelined)], stdout=PIPE, stdin=PIPE,
+def test_generic(test_name, pipelined=0, simpy=0):
+    p = Popen(['python', 'cpusim.py', "--file", os.path.join("tests", test_name, test_name + ".ass"), "--pipelined", str(pipelined), "--simpy", str(simpy)], stdout=PIPE, stdin=PIPE,
               stderr=STDOUT)
 
     data_in = ""
@@ -21,110 +21,160 @@ def test_generic(test_name, pipelined=0):
 
     return cmd_out.decode(), expected_out
 
-
 class TestSim(unittest.TestCase):
     def setUp(self):
         pass
 
     # non-pipelined
-    def test1(self):
-        cmd_out, expected_out = test_generic("test1")
+    # def test1(self):
+    #     cmd_out, expected_out = test_generic("test1")
+    #     self.assertEqual(cmd_out, expected_out)
+    #
+    # def test2(self):
+    #     cmd_out, expected_out = test_generic("test2")
+    #     self.assertEqual(cmd_out, expected_out)
+    #
+    # def test4(self):
+    #     cmd_out, expected_out = test_generic("test4")
+    #     self.assertEqual(cmd_out, expected_out)
+    #
+    # def test6(self):
+    #     cmd_out, expected_out = test_generic("test6")
+    #     self.assertEqual(cmd_out, expected_out)
+    #
+    # def test7(self):
+    #     cmd_out, expected_out = test_generic("test7")
+    #     self.assertEqual(cmd_out, expected_out)
+    #
+    # def testsk(self):
+    #     cmd_out, expected_out = test_generic("testsk")
+    #     self.assertEqual(cmd_out, expected_out)
+    #
+    # def testsk_no_haz(self):
+    #     cmd_out, expected_out = test_generic("testsk-no-haz")
+    #     self.assertEqual(cmd_out, expected_out)
+    #
+    # def testjmp(self):
+    #     cmd_out, expected_out = test_generic("testjmp")
+    #     self.assertEqual(cmd_out, expected_out)
+    #
+    # def testboolexpr(self):
+    #     cmd_out, expected_out = test_generic("boolexpr")
+    #     self.assertEqual(cmd_out, expected_out)
+    #
+    # def testisort10(self):
+    #     cmd_out, expected_out = test_generic("insertion-sort-10")
+    #     self.assertEqual(cmd_out, expected_out)
+    #
+    # def testisort100(self):
+    #     cmd_out, expected_out = test_generic("insertion-sort-100")
+    #     self.assertEqual(cmd_out, expected_out)
+    #
+    # def testfun10(self):
+    #     cmd_out, expected_out = test_generic("functions10")
+    #     self.assertEqual(cmd_out, expected_out)
+    #
+    # ###############################################################################################
+    # # pipelined
+    # def test1_pipe(self):
+    #     cmd_out, expected_out = test_generic("test1", 1)
+    #     # print(cmd_out, expected_out)
+    #     self.assertEqual(cmd_out, expected_out)
+    #
+    # def test2_pipe(self):
+    #     cmd_out, expected_out = test_generic("test2", 1)
+    #     self.assertEqual(cmd_out, expected_out)
+    #
+    # def test4_pipe(self):
+    #     cmd_out, expected_out = test_generic("test4", 1)
+    #     self.assertEqual(cmd_out, expected_out)
+    #
+    # def test6_pipe(self):
+    #     cmd_out, expected_out = test_generic("test6", 1)
+    #     self.assertEqual(cmd_out, expected_out)
+    #
+    # def test7_pipe(self):
+    #     cmd_out, expected_out = test_generic("test7", 1)
+    #     self.assertEqual(cmd_out, expected_out)
+    #
+    # def testsk_pipe(self):
+    #     cmd_out, expected_out = test_generic("testsk", 1)
+    #     self.assertEqual(cmd_out, expected_out)
+    #
+    # def testsk_no_haz_pipe(self):
+    #     cmd_out, expected_out = test_generic("testsk-no-haz", 1)
+    #     self.assertEqual(cmd_out, expected_out)
+    #
+    # def testjmp_p(self):
+    #     cmd_out, expected_out = test_generic("testjmp", 1)
+    #     self.assertEqual(cmd_out, expected_out)
+    #
+    # def testboolexpr_p(self):
+    #     cmd_out, expected_out = test_generic("boolexpr", 1)
+    #     self.assertEqual(cmd_out, expected_out)
+    #
+    # def testisort10_p(self):
+    #     cmd_out, expected_out = test_generic("insertion-sort-10", 1)
+    #     self.assertEqual(cmd_out, expected_out)
+    #
+    # def testisort100_p(self):
+    #     cmd_out, expected_out = test_generic("insertion-sort-100", 1)
+    #     self.assertEqual(cmd_out, expected_out)
+    #
+    # def testfun10_p(self):
+    #     cmd_out, expected_out = test_generic("functions10", 1)
+    #     self.assertEqual(cmd_out, expected_out)
+
+##########################################################################
+
+    # non-pipelined simpy
+    def test1_n_s(self):
+        cmd_out, expected_out = test_generic("test1", simpy=1)
         # print(cmd_out, expected_out)
         self.assertEqual(cmd_out, expected_out)
 
-    def test2(self):
-        cmd_out, expected_out = test_generic("test2")
+    def test2_n_s(self):
+        cmd_out, expected_out = test_generic("test2", simpy=1)
         self.assertEqual(cmd_out, expected_out)
 
-    def test4(self):
-        cmd_out, expected_out = test_generic("test4")
+    def test4_n_s(self):
+        cmd_out, expected_out = test_generic("test4", simpy=1)
         self.assertEqual(cmd_out, expected_out)
 
-    def test6(self):
-        cmd_out, expected_out = test_generic("test6")
+    def test6_n_s(self):
+        cmd_out, expected_out = test_generic("test6", simpy=1)
         self.assertEqual(cmd_out, expected_out)
 
-    def test7(self):
-        cmd_out, expected_out = test_generic("test7")
+    def test7_n_s(self):
+        cmd_out, expected_out = test_generic("test7", simpy=1)
         self.assertEqual(cmd_out, expected_out)
 
-    def testsk(self):
-        cmd_out, expected_out = test_generic("testsk")
+    def testsk_n_s(self):
+        cmd_out, expected_out = test_generic("testsk", simpy=1)
         self.assertEqual(cmd_out, expected_out)
 
-    def testsk_no_haz(self):
-        cmd_out, expected_out = test_generic("testsk-no-haz")
+    def testsk_no_haz_n_s(self):
+        cmd_out, expected_out = test_generic("testsk-no-haz", simpy=1)
         self.assertEqual(cmd_out, expected_out)
 
-    def testjmp(self):
-        cmd_out, expected_out = test_generic("testjmp")
+    def testjmp_n_s(self):
+        cmd_out, expected_out = test_generic("testjmp", simpy=1)
         self.assertEqual(cmd_out, expected_out)
 
-    def testboolexpr(self):
-        cmd_out, expected_out = test_generic("boolexpr")
+    def testboolexpr_n_s(self):
+        cmd_out, expected_out = test_generic("boolexpr", simpy=1)
         self.assertEqual(cmd_out, expected_out)
 
-    def testisort10(self):
-        cmd_out, expected_out = test_generic("insertion-sort-10")
+    def testisort10_n_s(self):
+        cmd_out, expected_out = test_generic("insertion-sort-10", simpy=1)
         self.assertEqual(cmd_out, expected_out)
 
-    def testisort100(self):
-        cmd_out, expected_out = test_generic("insertion-sort-100")
+    def testisort100_n_s(self):
+        cmd_out, expected_out = test_generic("insertion-sort-100", simpy=1)
         self.assertEqual(cmd_out, expected_out)
 
-    def testfun10(self):
-        cmd_out, expected_out = test_generic("functions10")
-        self.assertEqual(cmd_out, expected_out)
-
-    ###############################################################################################
-    # pipelined
-    def test1_pipe(self):
-        cmd_out, expected_out = test_generic("test1", 1)
-        # print(cmd_out, expected_out)
-        self.assertEqual(cmd_out, expected_out)
-
-    def test2_pipe(self):
-        cmd_out, expected_out = test_generic("test2", 1)
-        self.assertEqual(cmd_out, expected_out)
-
-    def test4_pipe(self):
-        cmd_out, expected_out = test_generic("test4", 1)
-        self.assertEqual(cmd_out, expected_out)
-
-    def test6_pipe(self):
-        cmd_out, expected_out = test_generic("test6", 1)
-        self.assertEqual(cmd_out, expected_out)
-
-    def test7_pipe(self):
-        cmd_out, expected_out = test_generic("test7", 1)
-        self.assertEqual(cmd_out, expected_out)
-
-    def testsk_pipe(self):
-        cmd_out, expected_out = test_generic("testsk", 1)
-        self.assertEqual(cmd_out, expected_out)
-
-    def testsk_no_haz_pipe(self):
-        cmd_out, expected_out = test_generic("testsk-no-haz", 1)
-        self.assertEqual(cmd_out, expected_out)
-
-    def testjmp_p(self):
-        cmd_out, expected_out = test_generic("testjmp", 1)
-        self.assertEqual(cmd_out, expected_out)
-
-    def testboolexpr_p(self):
-        cmd_out, expected_out = test_generic("boolexpr", 1)
-        self.assertEqual(cmd_out, expected_out)
-
-    def testisort10_p(self):
-        cmd_out, expected_out = test_generic("insertion-sort-10", 1)
-        self.assertEqual(cmd_out, expected_out)
-
-    def testisort100_p(self):
-        cmd_out, expected_out = test_generic("insertion-sort-100", 1)
-        self.assertEqual(cmd_out, expected_out)
-
-    def testfun10_p(self):
-        cmd_out, expected_out = test_generic("functions10", 1)
+    def testfun10_n_s(self):
+        cmd_out, expected_out = test_generic("functions10", simpy=1)
         self.assertEqual(cmd_out, expected_out)
 
 if __name__ == '__main__':
