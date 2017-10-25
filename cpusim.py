@@ -15,7 +15,6 @@ import gv
 debug = True
 debug = False
 
-
 class Computor:
     def __init__(self, program):
         self._program = program
@@ -24,7 +23,7 @@ class Computor:
         self.decodeunit = DecUnit()
         self.execunit = ExecUnit()
         self.wbunit = WBUnit()
-        gv.R = RegisterFile(32)
+        gv.R = RegisterFile(48)
         self.clock_cnt = 0
 
     def run_non_pipelined(self):
@@ -154,7 +153,7 @@ def print_data_mem():
     # print("\n+    0 1 2 3"),
     print("")
     for idx, word in enumerate(gv.data_mem):
-        print idx, word
+        print(idx, word)
         # if idx % 4 == 0:
         #     print "\n" + (str(idx) + ".").ljust(4),
         #

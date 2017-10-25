@@ -23,7 +23,7 @@ class Pipeline:
     def __str__(self):
         string = ""
         for idx, instr in enumerate(self.pipe):
-            string += "("  + Stages.keys()[idx][0] + ": " + str(instr) + ") "
+            string += "("  + list(Stages.keys())[idx][0] + ": " + str(instr) + ") "
 
         return string
         # return self.opcode + " " + str(self.operands)

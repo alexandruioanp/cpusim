@@ -54,7 +54,7 @@ class Instruction:
             reg = val = -1
 
         if debug:
-            print "Evaluating", str(self)
+            print("Evaluating", str(self))
 
         self.operand_vals = []
 
@@ -187,8 +187,10 @@ class LOADInstruction(WRITEBACKInstruction):
         d = gv.data_mem[self.operand_vals[0] + self.operand_vals[1] + 3]
         self.result = a + (b << 8) + (c << 16) + (d << 24)
 
+        if self.result >> 31 == 1:
+            self.result = -((0xFFFFFFFF^self.result) + 1)
 
-    # LDI R2,76 (dest = imm)
+# LDI R2,76 (dest = imm)
 class LDIInstruction(WRITEBACKInstruction):
     def decode(self):
         self.dest = self.operands[0]
@@ -245,7 +247,7 @@ class DIVInstruction(WRITEBACKInstruction):
         self.src = list(self.operands[1:])
 
     def execute(self):
-        self.result = self.operand_vals[0] / self.operand_vals[1]
+        self.result = int(self.operand_vals[0] / self.operand_vals[1])
 
 
 

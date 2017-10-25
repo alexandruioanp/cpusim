@@ -76,10 +76,6 @@ class TestSim(unittest.TestCase):
         cmd_out, expected_out = test_generic("functions10")
         self.assertEqual(cmd_out, expected_out)
 
-    def testbullseye(self):
-        cmd_out, expected_out = test_generic("bullseye")
-        self.assertEqual(cmd_out, expected_out)
-
     ###############################################################################################
     # pipelined
     def test1_pipe(self):
@@ -127,7 +123,7 @@ class TestSim(unittest.TestCase):
         cmd_out, expected_out = test_generic("insertion-sort-100", 1)
         self.assertEqual(cmd_out, expected_out)
 
-    def testfun10(self):
+    def testfun10_p(self):
         cmd_out, expected_out = test_generic("functions10", 1)
         self.assertEqual(cmd_out, expected_out)
 
