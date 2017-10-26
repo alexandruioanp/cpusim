@@ -10,6 +10,7 @@ class WBUnit:
     def do(self):
         # print("WB WILL WAIT")
         # wait for prev stage
+        # print("WB", self.env.now)
         instr = self.writeback()
         if instr:
             self.last_instr = instr

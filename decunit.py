@@ -10,6 +10,7 @@ class DecUnit:
     def do(self):
         # print("DEC")
         self.decode()
+        # print("DEC", self.env.now)
         yield self.env.process(gv.pipeline.get_prev("DECODE").do())
 
     def decode(self):

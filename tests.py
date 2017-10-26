@@ -3,7 +3,9 @@ from subprocess import Popen, PIPE, STDOUT
 import os
 
 def test_generic(test_name, pipelined=0, simpy=0):
-    p = Popen(['python', 'cpusim.py', "--file", os.path.join("tests", test_name, test_name + ".ass"), "--pipelined", str(pipelined), "--simpy", str(simpy)], stdout=PIPE, stdin=PIPE,
+    p = Popen(['python', 'cpusim.py', "--file", os.path.join("tests", test_name, test_name + ".ass"),
+               "--pipelined", str(pipelined), "--simpy", str(simpy),
+               "--stats", "0"], stdout=PIPE, stdin=PIPE,
               stderr=STDOUT)
 
     data_in = ""

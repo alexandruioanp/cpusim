@@ -10,6 +10,7 @@ class ExecUnit:
     def do(self):
         # print("exec")
         self.execute()
+        # print("EXEC", self.env.now)
         yield self.env.process(gv.pipeline.get_prev("EXECUTE").do())
 
     def execute(self):
@@ -19,6 +20,10 @@ class ExecUnit:
         if instr:
             instr.evaluate_operands(self.bypassed)
             instr.execute()
+            # yield self.env.timeout(instr.duration)
+            # if gv.is_simpy:
+            #     yield self.env.timeout(1)
+
             self.bypassed = None
 
             if gv.enable_forwarding:
@@ -27,4 +32,5 @@ class ExecUnit:
                 except AttributeError:
                     pass
 
+        gv.instr_exec += 1
         gv.unit_statuses[Stages["EXECUTE"]] = "READY"

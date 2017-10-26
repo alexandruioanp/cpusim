@@ -15,6 +15,7 @@ class FetchUnit:
     def do(self):
         # yield self.env.process(gv.pipeline.get_prev("FETCH").do())
         self.fetch(1)
+        # print("F", self.env.now)
         yield self.env.timeout(1)
 
     def fetch(self, num):

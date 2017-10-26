@@ -28,17 +28,23 @@ class Computor:
         self.wbunit = WBUnit(self.env)
         gv.R = RegisterFile(48)
         self.clock_cnt = 0
+        self.print_stats = False
+        gv.instr_exec = 0
         gv.stages = [self.fetchunit, self.decodeunit, self.execunit, self.wbunit]
 
     def run_simpy(self):
         while True:
             # print(self.env.now)
             yield self.env.process(gv.stages[-1].do())
-            a = 1
             status = gv.pipeline.advance()
             if self.wbunit.last_instr.opcode == "HALT":
                 break
-            yield self.env.timeout(1)
+
+        if self.print_stats:
+            print("*************************************")
+            print("Cycles taken:", self.env.now)
+            print("Instructions executed:", gv.instr_exec)
+            print("IPC:", gv.instr_exec / self.clock_cnt)
 
 
     def run_non_pipelined(self):
@@ -82,8 +88,11 @@ class Computor:
             if debug:
                 print("END")
 
-        # if debug:
-        # print("Cycles taken:", self.clock_cnt)
+        if self.print_stats:
+            print("*************************************")
+            print("Cycles taken:", self.clock_cnt)
+            print("Instructions executed:", gv.instr_exec)
+            print("IPC:", gv.instr_exec / self.clock_cnt)
 
     def run_pipelined(self):
         if debug:
@@ -117,9 +126,12 @@ class Computor:
 
             if debug:
                 print("END")
-        #
-        # if debug:
-        # print("Cycles taken:", self.clock_cnt)
+
+        if self.print_stats:
+            print("*************************************")
+            print("Cycles taken:", self.clock_cnt)
+            print("Instructions executed:", gv.instr_exec)
+            print("IPC:", gv.instr_exec / self.clock_cnt)
 
 
 def assemble(asm, program):
@@ -192,22 +204,21 @@ def main(args):
     env = simpy.Environment()
     pc3000 = Computor(program, env)
 
-    if args.pipelined:
+    if args.stats:
+        pc3000.print_stats = True
+
+    if args.simpy:
         gv.is_pipelined = True
-        if args.simpy:
-            pass
-        else:
-            pc3000.run_pipelined()
+        # gv.is_simpy = True
+        env.process(pc3000.run_simpy())
+        env.run()
     else:
-        gv.is_pipelined = False
-        if args.simpy:
-
+        if args.pipelined:
             gv.is_pipelined = True
-            env.process(pc3000.run_simpy())
+            pc3000.run_pipelined()
         else:
+            gv.is_pipelined = False
             pc3000.run_non_pipelined()
-
-    env.run()
 
     if debug:
         if args.simpy:
@@ -225,6 +236,8 @@ if __name__ == '__main__':
                         help='Run in pipelined mode?')
     parser.add_argument('--simpy', required=False, default=0, type=int, choices={0, 1},
                         help='Run using simpy?')
+    parser.add_argument('--stats', required=False, default=0, type=int, choices={0, 1},
+                        help='Print run stats')
 
     args = parser.parse_args()
 

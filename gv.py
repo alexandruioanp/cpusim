@@ -6,3 +6,4 @@ enable_forwarding = True
 # enable_forwarding = False
 is_pipelined = False
 stages = []
+is_simpy = False
