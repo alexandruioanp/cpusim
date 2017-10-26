@@ -33,8 +33,10 @@ class Computor:
     def run_simpy(self):
         while True:
             # print(self.env.now)
-            yield self.env.process(gv.stages[-1].do()) # writeback
-            if gv.pipeline.advance() == 2:
+            yield self.env.process(gv.stages[-1].do())
+            a = 1
+            status = gv.pipeline.advance()
+            if self.wbunit.last_instr.opcode == "HALT":
                 break
             yield self.env.timeout(1)
 
@@ -199,6 +201,8 @@ def main(args):
     else:
         gv.is_pipelined = False
         if args.simpy:
+
+            gv.is_pipelined = True
             env.process(pc3000.run_simpy())
         else:
             pc3000.run_non_pipelined()

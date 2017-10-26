@@ -1,15 +1,19 @@
 import gv
 from pipeline import *
+import instruction
 
 class WBUnit:
     def __init__(self, env):
         self.env = env
-        pass
+        self.last_instr = instruction.getNOP()
 
     def do(self):
         # print("WB WILL WAIT")
         # wait for prev stage
-        self.writeback()
+        instr = self.writeback()
+        if instr:
+            self.last_instr = instr
+
         yield self.env.process(gv.pipeline.get_prev("WRITEBACK").do())
 
     def writeback(self):

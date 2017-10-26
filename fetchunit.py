@@ -14,8 +14,8 @@ class FetchUnit:
 
     def do(self):
         # yield self.env.process(gv.pipeline.get_prev("FETCH").do())
-        yield self.env.timeout(1)
         self.fetch(1)
+        yield self.env.timeout(1)
 
     def fetch(self, num):
         gv.unit_statuses[Stages["FETCH"]] = "BUSY"

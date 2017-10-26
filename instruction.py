@@ -23,7 +23,7 @@ def getNOP():
 debug = True
 debug = False
 
-class Instruction:
+class Instruction():
     def __str__(self):
         return self.opcode + " " + str(self.operands)
 
