@@ -15,10 +15,11 @@ State = {
 }
 
 class Pipeline:
-    def __init__(self):
+    def __init__(self, env=None):
         self.NUM_STAGES = 4
         self.pipe = [None] * self.NUM_STAGES
         gv.unit_statuses = ["READY"] * self.NUM_STAGES
+        self.env = env
 
     def __str__(self):
         string = ""
@@ -46,6 +47,10 @@ class Pipeline:
 
     def get_next(self, name):
         return gv.stages[self.get_next_idx(name)]
+
+    def advance_yield(self):
+        yield self.env.timeout(1)
+        return self.advance()
 
     def advance(self):
         if self.pipe == [None] * self.NUM_STAGES:

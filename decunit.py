@@ -13,6 +13,10 @@ class DecUnit:
         # print("DEC", self.env.now)
         yield self.env.process(gv.pipeline.get_prev("DECODE").do())
 
+    def wait(self):
+        # print("DECODE WAITING")
+        yield self.env.process(gv.pipeline.get_next("DECODE").wait())
+
     def decode(self):
         instr = gv.pipeline.pipe[Stages["DECODE"]]
         gv.unit_statuses[Stages["DECODE"]] = "BUSY"

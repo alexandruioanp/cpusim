@@ -16,7 +16,11 @@ class FetchUnit:
         # yield self.env.process(gv.pipeline.get_prev("FETCH").do())
         self.fetch(1)
         # print("F", self.env.now)
-        yield self.env.timeout(1)
+        yield self.env.timeout(0)
+
+    def wait(self):
+        # print("FETCH WAITING")
+        yield self.env.process(gv.pipeline.get_next("FETCH").wait())
 
     def fetch(self, num):
         gv.unit_statuses[Stages["FETCH"]] = "BUSY"
@@ -31,8 +35,6 @@ class FetchUnit:
                 print("Couldn't fetch new instruction - pipeline stalled")
 
         gv.unit_statuses[Stages["FETCH"]] = "READY"
-
-        # return instr
 
 
     def get_from_stream(self, num):

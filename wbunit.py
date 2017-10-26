@@ -17,6 +17,11 @@ class WBUnit:
 
         yield self.env.process(gv.pipeline.get_prev("WRITEBACK").do())
 
+    def wait(self):
+        # print("WB WAITING")
+        # yield self.env.process(gv.pipeline.get_next("FETCH").wait())
+        yield self.env.timeout(0)
+
     def writeback(self):
         instr = gv.pipeline.pipe[Stages["WRITEBACK"]]
         gv.unit_statuses[Stages["WRITEBACK"]] = "BUSY"

@@ -18,7 +18,7 @@ debug = True
 debug = False
 
 class Computor:
-    def __init__(self, program, env):
+    def __init__(self, program, env=None):
         self._program = program
         self.env = env
         self.fetchunit = FetchUnit(program, self.env)
@@ -34,9 +34,9 @@ class Computor:
 
     def run_simpy(self):
         while True:
-            # print(self.env.now)
             yield self.env.process(gv.stages[-1].do())
-            status = gv.pipeline.advance()
+            # yield self.env.process(gv.stages[0].wait())
+            yield self.env.process(gv.pipeline.advance_yield())
             if self.wbunit.last_instr.opcode == "HALT":
                 break
 
@@ -44,7 +44,7 @@ class Computor:
             print("*************************************")
             print("Cycles taken:", self.env.now)
             print("Instructions executed:", gv.instr_exec)
-            print("IPC:", gv.instr_exec / self.clock_cnt)
+            print("IPC:", gv.instr_exec / self.env.now)
 
 
     def run_non_pipelined(self):
@@ -116,7 +116,6 @@ class Computor:
             self.decodeunit.decode()
             if debug:
                 print("After decode:", str(gv.pipeline), "clk", self.clock_cnt)
-
 
             self.fetchunit.fetch(1)
             if debug:
@@ -200,8 +199,8 @@ def main(args):
     program = []
     assemble(asm, program)
 
-    gv.pipeline = Pipeline()
     env = simpy.Environment()
+    gv.pipeline = Pipeline(env)
     pc3000 = Computor(program, env)
 
     if args.stats:
