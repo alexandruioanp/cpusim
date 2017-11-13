@@ -7,3 +7,7 @@ enable_forwarding = True
 is_pipelined = False
 stages = []
 is_simpy = False
+debug_timing = False
+ROB_entries = 16
+retire_rate = 1
+ROB = None

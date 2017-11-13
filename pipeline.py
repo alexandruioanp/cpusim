@@ -66,6 +66,8 @@ class Pipeline:
                 if gv.unit_statuses[i] == "READY" and gv.unit_statuses[i - 1] == "READY":
                     self.pipe[i] = self.pipe[i - 1]
                     self.pipe[i - 1] = None
+                else:
+                    print("NO")
             # self.pipe = [None] + self.pipe[:-1]
             return 0
 

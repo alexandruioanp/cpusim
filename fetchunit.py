@@ -7,7 +7,6 @@ class FetchUnit:
         self.env = env
         self.pc = 0
         self.instruction_stream = istream
-        # gv.stages.append(self).append(self)
 
     def jump(self, target):
         self.pc = target
@@ -15,6 +14,8 @@ class FetchUnit:
     def do(self):
         # yield self.env.process(gv.pipeline.get_prev("FETCH").do())
         self.fetch(1)
+        if gv.debug_timing:
+            print(str(self.env.now) + ": Fetch")
         # print("F", self.env.now)
         yield self.env.timeout(0)
 
@@ -36,10 +37,8 @@ class FetchUnit:
 
         gv.unit_statuses[Stages["FETCH"]] = "READY"
 
-
     def get_from_stream(self, num):
         while self.pc < len(self.instruction_stream):
-
             instr = self.instruction_stream[self.pc:self.pc + num]
             self.pc += num
 

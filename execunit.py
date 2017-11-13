@@ -8,11 +8,17 @@ class ExecUnit:
 
     def do(self):
         self.execute()
-        if self.instr:
-            yield self.env.timeout(self.instr.duration - 1)
 
         yield self.env.process(gv.pipeline.get_prev("EXECUTE").do())
 
+        if gv.debug_timing:
+            print(str(self.env.now) + ": Starting execution of " + str(self.instr))
+
+        if self.instr:
+            yield self.env.timeout(self.instr.duration - 1)
+
+        if gv.debug_timing:
+            print(str(self.env.now) + ": Executed", str(self.instr))
 
     def wait(self):
         print("EXEC WAITING")
@@ -35,5 +41,7 @@ class ExecUnit:
                     self.bypassed = (self.instr.dest, self.instr.result)
                 except AttributeError:
                     pass
+
+            self.instr.is_complete = True
 
         gv.unit_statuses[Stages["EXECUTE"]] = "READY"

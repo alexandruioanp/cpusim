@@ -5,12 +5,14 @@ import instruction
 class DecUnit:
     def __init__(self, env):
         self.env = env
-        # gv.stages.append(self)
 
     def do(self):
         # print("DEC")
         self.decode()
-        # print("DEC", self.env.now)
+
+        if gv.debug_timing:
+            print(str(self.env.now) + ": Issued", str(self.instr))
+
         yield self.env.process(gv.pipeline.get_prev("DECODE").do())
 
     def wait(self):
@@ -18,23 +20,19 @@ class DecUnit:
         yield self.env.process(gv.pipeline.get_next("DECODE").wait())
 
     def decode(self):
-        instr = gv.pipeline.pipe[Stages["DECODE"]]
+        self.instr = gv.pipeline.pipe[Stages["DECODE"]]
         gv.unit_statuses[Stages["DECODE"]] = "BUSY"
 
-        if instr:
-            instr.decode()
+        if self.instr:
+            self.instr.decode()
 
-            # check for jump?
-            if instr.isUncondBranch:
-                gv.fu.jump(instr.target)
+            # check for jump
+            if self.instr.isUncondBranch:
+                gv.fu.jump(self.instr.target)
                 gv.pipeline.pipe[Stages["DECODE"]] = instruction.getNOP()
-
-
-        # check for hazard? -- ??
-        # if hazard
-            # save instruction
-            # feed NOP(s?)
-            # next time, feed actual instruction
-        # self.saved_instr
+                # gv.ROB.popleft()
+                gv.ROB.append(gv.pipeline.pipe[Stages["DECODE"]])
+            else:
+                gv.ROB.append(self.instr)
 
         gv.unit_statuses[Stages["DECODE"]] = "READY"

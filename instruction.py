@@ -45,6 +45,9 @@ class Instruction():
         self.dest = []
         self.duration = 1
 
+        self.is_complete = False
+        self.is_speculative = False
+
     def decode(self):
         pass
 
@@ -94,7 +97,7 @@ class BRANCHInstruction(Instruction):
 class MEMInstruction(Instruction):
     def __init__(self, *args, **kwargs):
         super(MEMInstruction, self).__init__(*args, **kwargs)
-        self.duration = 1
+        self.duration = 5
 
 
 class JMPInstruction(BRANCHInstruction):
@@ -131,7 +134,7 @@ class CONDBRANCHInstruction(BRANCHInstruction):
         if self.operator(self.operand_vals[0], 0):
             gv.fu.jump(self.target)
 
-            if gv.is_pipelined:
+            if gv.is_pipelined: # HERE
                 gv.pipeline.pipe[Stages["DECODE"]] = getNOP()
         else:
             pass

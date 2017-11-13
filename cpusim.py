@@ -36,8 +36,10 @@ class Computor:
         while True:
             yield self.env.process(gv.stages[-1].do())
             # yield self.env.process(gv.stages[0].wait())
+            if gv.debug_timing:
+                print(str(self.env.now) + ": main ticking")
             yield self.env.process(gv.pipeline.advance_yield())
-            if self.wbunit.last_instr.opcode == "HALT":
+            if self.wbunit.last_instr[-1].opcode == "HALT":
                 break
 
         if self.print_stats:
@@ -50,8 +52,7 @@ class Computor:
     def run_non_pipelined(self):
         if debug:
             print("RUNNING NON-PIPELINED")
-        last_instr = getNOP()
-        while not isinstance(last_instr, HALTInstruction):
+        while self.wbunit.last_instr[-1].opcode != "HALT":
             if debug:
                 print("\n\nSTART")
                 print("Before anything:", str(gv.pipeline), "clk", self.clock_cnt)
@@ -79,7 +80,7 @@ class Computor:
             # writeback
             if debug:
                 print("Before writeback:", str(gv.pipeline), "clk", self.clock_cnt)
-            last_instr = self.wbunit.writeback()
+            self.wbunit.writeback()
             self.clock_cnt += 1
             if debug:
                 print("After writeback:", str(gv.pipeline), "clk", self.clock_cnt)
@@ -97,15 +98,14 @@ class Computor:
     def run_pipelined(self):
         if debug:
             print("RUNNING PIPELINED")
-        last_instr = getNOP()
-        while not isinstance(last_instr, HALTInstruction):
+        while self.wbunit.last_instr[-1].opcode != "HALT":
             self.clock_cnt += 1
 
             if debug:
                 print("\n\nSTART")
                 print("Before anything:", str(gv.pipeline), "clk", self.clock_cnt)
 
-            last_instr = self.wbunit.writeback()
+            self.wbunit.writeback()
             if debug:
                 print("After writeback:", str(gv.pipeline), "clk", self.clock_cnt)
 
@@ -208,7 +208,6 @@ def main(args):
 
     if args.simpy:
         gv.is_pipelined = True
-        # gv.is_simpy = True
         env.process(pc3000.run_simpy())
         env.run()
     else:
