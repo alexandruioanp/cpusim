@@ -34,12 +34,24 @@ class Computor:
 
     def run_simpy(self):
         while True:
-            yield self.env.process(gv.stages[-1].do())
+            # yield self.env.process(gv.stages[0].do())
+            # yield anyof # all stages should complete in 1 cycle apart from execute
+            # advance manually
+
+            self.env.process(gv.stages[3].do())
+            self.env.process(gv.stages[2].do())
+            self.env.process(gv.stages[1].do())
+            self.env.process(gv.stages[0].do())
+            # print(x)
+            yield self.env.timeout(1)
+            gv.pipeline.advance()
+
             if gv.debug_timing:
                 print(str(self.env.now) + ": main ticking")
-            yield self.env.process(gv.pipeline.advance_yield())
+
             if self.wbunit.last_instr[-1].opcode == "HALT":
                 break
+
 
         if self.print_stats:
             print("*************************************")

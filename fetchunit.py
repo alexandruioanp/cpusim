@@ -12,11 +12,12 @@ class FetchUnit:
         self.pc = target
 
     def do(self):
+        yield self.env.timeout(1)
         self.fetch(1)
         if gv.debug_timing:
             print(str(self.env.now) + ": Fetch")
-        # print("F", self.env.now)
-        yield self.env.timeout(0)
+        print("F", self.env.now)
+        # yield self.env.timeout(0)
 
     def fetch(self, num):
         instr = self.instruction_stream[self.pc:self.pc + num]
