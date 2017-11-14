@@ -31,10 +31,9 @@ class ExecUnit:
 
             self.bypassed = None
 
-            if gv.enable_forwarding:
-                try:
-                    self.bypassed = (self.instr.dest, self.instr.result)
-                except AttributeError:
-                    pass
+            try:
+                self.bypassed = (self.instr.dest, self.instr.result)
+            except AttributeError:
+                pass
 
             self.instr.is_complete = True

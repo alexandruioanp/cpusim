@@ -134,8 +134,7 @@ class CONDBRANCHInstruction(BRANCHInstruction):
         if self.operator(self.operand_vals[0], 0):
             gv.fu.jump(self.target)
 
-            if gv.is_pipelined: # HERE
-                gv.pipeline.pipe[Stages["DECODE"]] = getNOP()
+            gv.pipeline.pipe[Stages["DECODE"]] = getNOP()
         else:
             pass
 

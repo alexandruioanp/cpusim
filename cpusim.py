@@ -47,90 +47,6 @@ class Computor:
             print("Instructions executed:", gv.instr_exec)
             print("IPC:", gv.instr_exec / self.env.now)
 
-    def run_non_pipelined(self):
-        if debug:
-            print("RUNNING NON-PIPELINED")
-        while self.wbunit.last_instr[-1].opcode != "HALT":
-            if debug:
-                print("\n\nSTART")
-                print("Before anything:", str(gv.pipeline), "clk", self.clock_cnt)
-            # fetch
-            self.fetchunit.fetch(1)
-            self.clock_cnt += 1
-            if debug:
-                print("After fetch:", str(gv.pipeline), "clk", self.clock_cnt, "now", self.env.now)
-            gv.pipeline.advance()
-
-            # decode
-            self.decodeunit.decode()
-            self.clock_cnt += 1
-            if debug:
-                print("After decode:", str(gv.pipeline), "clk", self.clock_cnt)
-            gv.pipeline.advance()
-
-            # execute
-            self.execunit.execute()
-            self.clock_cnt += 1
-            if debug:
-                print("After execute:", str(gv.pipeline), "clk", self.clock_cnt)
-            gv.pipeline.advance()
-
-            # writeback
-            if debug:
-                print("Before writeback:", str(gv.pipeline), "clk", self.clock_cnt)
-            self.wbunit.writeback()
-            self.clock_cnt += 1
-            if debug:
-                print("After writeback:", str(gv.pipeline), "clk", self.clock_cnt)
-            gv.pipeline.advance()
-
-            if debug:
-                print("END")
-
-        if self.print_stats:
-            print("*************************************")
-            print("Cycles taken:", self.clock_cnt)
-            print("Instructions executed:", gv.instr_exec)
-            print("IPC:", gv.instr_exec / self.clock_cnt)
-
-    def run_pipelined(self):
-        if debug:
-            print("RUNNING PIPELINED")
-        while self.wbunit.last_instr[-1].opcode != "HALT":
-            self.clock_cnt += 1
-
-            if debug:
-                print("\n\nSTART")
-                print("Before anything:", str(gv.pipeline), "clk", self.clock_cnt)
-
-            self.wbunit.writeback()
-            if debug:
-                print("After writeback:", str(gv.pipeline), "clk", self.clock_cnt)
-
-            self.execunit.execute()
-            if debug:
-                print("After execute:", str(gv.pipeline), "clk", self.clock_cnt)
-
-            self.decodeunit.decode()
-            if debug:
-                print("After decode:", str(gv.pipeline), "clk", self.clock_cnt)
-
-            self.fetchunit.fetch(1)
-            if debug:
-                print("After fetch:", str(gv.pipeline), "clk", self.clock_cnt)
-
-            gv.pipeline.advance()
-
-            if debug:
-                print("END")
-
-        if self.print_stats:
-            print("*************************************")
-            print("Cycles taken:", self.clock_cnt)
-            print("Instructions executed:", gv.instr_exec)
-            print("IPC:", gv.instr_exec / self.clock_cnt)
-
-
 def assemble(asm, program):
     label_targets = {}
     same_line_no = []
@@ -204,33 +120,16 @@ def main(args):
     if args.stats:
         pc3000.print_stats = True
 
-    if args.simpy:
-        gv.is_pipelined = True
-        env.process(pc3000.run_simpy())
-        env.run()
-    else:
-        if args.pipelined:
-            gv.is_pipelined = True
-            pc3000.run_pipelined()
-        else:
-            gv.is_pipelined = False
-            pc3000.run_non_pipelined()
+    env.process(pc3000.run_simpy())
+    env.run()
 
-    if debug:
-        if args.simpy:
-            print("CLK SimPY:", env.now)
-        else:
-            print("")
     # if debug:
-    # print_data_mem()
-
+        # print_data_mem()
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--file', required=True, help='Input .ass file')
-    parser.add_argument('--pipelined', required=False, default=0, type=int, choices={0, 1},
-                        help='Run in pipelined mode?')
-    parser.add_argument('--simpy', required=False, default=0, type=int, choices={0, 1},
+    parser.add_argument('--simpy', required=False, default=1, type=int, choices={0, 1},
                         help='Run using simpy?')
     parser.add_argument('--stats', required=False, default=0, type=int, choices={0, 1},
                         help='Print run stats')
