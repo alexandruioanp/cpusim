@@ -2,7 +2,7 @@ import gv
 from pipeline import *
 import instruction
 from collections import deque
-import itertools
+import simpy
 
 class WBUnit:
     def __init__(self, env):
@@ -12,27 +12,33 @@ class WBUnit:
 
     def do(self):
         # print("WB", self.env.now)
-        yield self.env.timeout(1)
-        instr = gv.pipeline.pipe[Stages["WRITEBACK"]]
+        try:
+            # while True:
+            instr = gv.pipeline.pipe[Stages["WRITEBACK"]]
 
-        self.writeback()
-        if instr:
-            self.last_instr = [instr]
+            self.writeback()
+            if instr:
+                self.last_instr = [instr]
 
-        print("W ", self.env.now)
-        # yield self.env.process(gv.pipeline.get_prev("WRITEBACK").do())
+            if gv.debug_timing:
+                print("W ", self.env.now)
+
+            yield self.env.timeout(1)
+        except simpy.Interrupt:
+            return
 
     def writeback(self):
         try:
             for i in range(gv.retire_rate):
                 if gv.ROB[0].opcode == "HALT":
-                    print("OPCODE")
+                    # print("OPCODE")
                     pass
                 if gv.ROB[0].is_complete:
                     instr = gv.ROB.popleft()
                     if instr != gv.pipeline.pipe[Stages['WRITEBACK']]:
-                        print("BADDDDD")
-                        print(instr, gv.pipeline.pipe[Stages['WRITEBACK']])
+                        # print("BADDDDD")
+                        # print(instr, gv.pipeline.pipe[Stages['WRITEBACK']])
+                        pass
                     instr.writeback()
                     gv.pipeline.pipe[Stages['WRITEBACK']] = None
                     self.last_instr.append(instr)

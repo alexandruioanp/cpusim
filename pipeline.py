@@ -1,4 +1,5 @@
 import collections
+import simpy
 
 import gv
 
@@ -49,20 +50,28 @@ class Pipeline:
         return gv.stages[self.get_next_idx(name)]
 
     def advance_yield(self):
-        yield self.env.timeout(1)
-        self.advance()
+        try:
+            # while True:
+            self.advance()
+            yield self.env.timeout(1)
+        except simpy.Interrupt:
+            return
 
     def advance(self):
         if self.pipe[-1]:
             print("<<WARN>> instr", self.pipe[-1], "not retired")
+            pass
         else:
             for i in reversed(range(1, self.NUM_STAGES)):
-                self.pipe[i] = self.pipe[i - 1]
-                self.pipe[i - 1] = None
+                if gv.unit_statuses[i] == "READY" and gv.unit_statuses[i - 1] == "READY":
+                    self.pipe[i] = self.pipe[i - 1]
+                    self.pipe[i - 1] = None
+                else:
+                    break
 
     def push(self, instr):
         if self.pipe[0]:
-            print("slot 0 not empty", self.pipe[0])
+            # print("slot 0 not empty", self.pipe[0])
             return 1
         else:
             self.pipe[0] = instr

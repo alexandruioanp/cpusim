@@ -33,24 +33,41 @@ class Computor:
         gv.stages = [self.fetchunit, self.decodeunit, self.execunit, self.wbunit]
 
     def run_simpy(self):
-        while True:
-            # yield self.env.process(gv.stages[0].do())
-            # yield anyof # all stages should complete in 1 cycle apart from execute
-            # advance manually
 
-            self.env.process(gv.stages[3].do())
-            self.env.process(gv.stages[2].do())
-            self.env.process(gv.stages[1].do())
-            self.env.process(gv.stages[0].do())
-            # print(x)
-            yield self.env.timeout(1)
-            gv.pipeline.advance()
+        events = []
+
+        # events.append(self.env.process(gv.stages[3].do())) # W
+        # events.append(self.env.process(gv.stages[2].do())) # E
+        # events.append(self.env.process(gv.pipeline.advance_yield()))
+        # events.append(self.env.process(gv.stages[1].do())) # F
+        # events.append(self.env.process(gv.stages[0].do())) # D
+        # events.append(self.env.process(gv.stages[3].do()))  # W
+        # events.append(self.env.process(gv.stages[2].do()))  # E
+        # events.append(self.env.process(gv.stages[1].do()))  # F
+        # events.append(self.env.process(gv.stages[0].do()))  # D
+        # events.append(self.env.process(gv.pipeline.advance_yield()))>
+
+        while True:
+
+            self.env.process(gv.pipeline.advance_yield())
+            self.env.process(gv.stages[3].do())  # W
+            if gv.unit_statuses[Stages["EXECUTE"]] == "READY":
+                self.env.process(gv.stages[2].do())  # E
+            self.env.process(gv.stages[1].do())  # F
+            self.env.process(gv.stages[0].do())  # D
+
 
             if gv.debug_timing:
                 print(str(self.env.now) + ": main ticking")
 
             if self.wbunit.last_instr[-1].opcode == "HALT":
+                # for ev in events:
+                #     ev.interrupt()
+                # break
                 break
+
+            yield self.env.timeout(1)
+
 
 
         if self.print_stats:

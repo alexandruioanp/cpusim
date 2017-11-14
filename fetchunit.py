@@ -1,4 +1,5 @@
 import gv
+import simpy
 from pipeline import *
 import instruction
 
@@ -12,22 +13,30 @@ class FetchUnit:
         self.pc = target
 
     def do(self):
-        yield self.env.timeout(1)
-        self.fetch(1)
-        if gv.debug_timing:
-            print(str(self.env.now) + ": Fetch")
-        print("F", self.env.now)
-        # yield self.env.timeout(0)
+        try:
+            # while True:
+            self.fetch(1)
+            if gv.debug_timing:
+                print(str(self.env.now) + ": Fetch")
+
+            yield self.env.timeout(1)
+        except simpy.Interrupt:
+            return
 
     def fetch(self, num):
         instr = self.instruction_stream[self.pc:self.pc + num]
 
         if instr:
             st = gv.pipeline.push(instr[0])
+            print(instr[0])
+            if instr[0].opcode == "HALT":
+                pass
+                a = 1 + 2
             if not st:
                 self.pc += num
             else:
                 print("Couldn't fetch new instruction - pipeline stalled")
+                pass
 
     def get_from_stream(self, num):
         while self.pc < len(self.instruction_stream):

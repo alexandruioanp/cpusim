@@ -1,4 +1,5 @@
 import gv
+import simpy
 from pipeline import *
 import instruction
 
@@ -7,19 +8,19 @@ class DecUnit:
         self.env = env
 
     def do(self):
-        yield self.env.timeout(1)
-        print("D ", self.env.now)
-        self.decode()
+        try:
+            # while True:
+            self.decode()
 
-        if gv.debug_timing:
-            print(str(self.env.now) + ": Issued", str(self.instr))
+            # if gv.debug_timing:
+            print(str(self.env.now) + ": Issued (Decode)", str(self.instr))
 
-        # yield self.env.process(gv.pipeline.get_prev("DECODE").do())
+            yield self.env.timeout(1)
+        except simpy.Interrupt:
+            return
 
     def decode(self):
         self.instr = gv.pipeline.pipe[Stages["DECODE"]]
-
-        gv.unit_statuses[Stages["EXECUTE"]] = "BUSY"
 
         if self.instr:
             self.instr.decode()
