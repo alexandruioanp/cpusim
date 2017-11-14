@@ -12,20 +12,13 @@ class FetchUnit:
         self.pc = target
 
     def do(self):
-        # yield self.env.process(gv.pipeline.get_prev("FETCH").do())
         self.fetch(1)
         if gv.debug_timing:
             print(str(self.env.now) + ": Fetch")
         # print("F", self.env.now)
         yield self.env.timeout(0)
 
-    def wait(self):
-        # print("FETCH WAITING")
-        yield self.env.process(gv.pipeline.get_next("FETCH").wait())
-
     def fetch(self, num):
-        gv.unit_statuses[Stages["FETCH"]] = "BUSY"
-
         instr = self.instruction_stream[self.pc:self.pc + num]
 
         if instr:
@@ -34,8 +27,6 @@ class FetchUnit:
                 self.pc += num
             else:
                 print("Couldn't fetch new instruction - pipeline stalled")
-
-        gv.unit_statuses[Stages["FETCH"]] = "READY"
 
     def get_from_stream(self, num):
         while self.pc < len(self.instruction_stream):

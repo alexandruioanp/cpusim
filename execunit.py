@@ -20,14 +20,9 @@ class ExecUnit:
         if gv.debug_timing:
             print(str(self.env.now) + ": Executed", str(self.instr))
 
-    def wait(self):
-        print("EXEC WAITING")
-        yield self.env.process(gv.pipeline.get_next("EXECUTE").wait())
-
     def execute(self):
         # print("EXECUTING")
         self.instr = gv.pipeline.pipe[Stages["EXECUTE"]]
-        gv.unit_statuses[Stages["EXECUTE"]] = "BUSY"
 
         if self.instr:
             gv.instr_exec += 1
@@ -43,5 +38,3 @@ class ExecUnit:
                     pass
 
             self.instr.is_complete = True
-
-        gv.unit_statuses[Stages["EXECUTE"]] = "READY"

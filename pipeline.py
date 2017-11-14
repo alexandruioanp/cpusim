@@ -50,26 +50,15 @@ class Pipeline:
 
     def advance_yield(self):
         yield self.env.timeout(1)
-        return self.advance()
+        self.advance()
 
     def advance(self):
-        if self.pipe == [None] * self.NUM_STAGES:
-            return 2
-            # print("no need to advance; pipeline empty")
-
         if self.pipe[-1]:
-            # print("instr", self.pipe[-1], "not retired")
-            return 1
+            print("<<WARN>> instr", self.pipe[-1], "not retired")
         else:
-            # print(gv.unit_statuses)
             for i in reversed(range(1, self.NUM_STAGES)):
-                if gv.unit_statuses[i] == "READY" and gv.unit_statuses[i - 1] == "READY":
-                    self.pipe[i] = self.pipe[i - 1]
-                    self.pipe[i - 1] = None
-                else:
-                    print("NO")
-            # self.pipe = [None] + self.pipe[:-1]
-            return 0
+                self.pipe[i] = self.pipe[i - 1]
+                self.pipe[i - 1] = None
 
     def push(self, instr):
         if self.pipe[0]:

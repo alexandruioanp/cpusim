@@ -129,53 +129,53 @@ class TestSim(unittest.TestCase):
 
 ##########################################################################
 
-    # non-pipelined simpy
-    def test1_n_s(self):
+    # simpy
+    def test1_s(self):
         cmd_out, expected_out = test_generic("test1", simpy=1)
         # print(cmd_out, expected_out)
         self.assertEqual(cmd_out, expected_out)
 
-    def test2_n_s(self):
+    def test2_s(self):
         cmd_out, expected_out = test_generic("test2", simpy=1)
         self.assertEqual(cmd_out, expected_out)
 
-    def test4_n_s(self):
+    def test4_s(self):
         cmd_out, expected_out = test_generic("test4", simpy=1)
         self.assertEqual(cmd_out, expected_out)
 
-    def test6_n_s(self):
+    def test6_s(self):
         cmd_out, expected_out = test_generic("test6", simpy=1)
         self.assertEqual(cmd_out, expected_out)
 
-    def test7_n_s(self):
+    def test7_s(self):
         cmd_out, expected_out = test_generic("test7", simpy=1)
         self.assertEqual(cmd_out, expected_out)
 
-    def testsk_n_s(self):
+    def testsk_s(self):
         cmd_out, expected_out = test_generic("testsk", simpy=1)
         self.assertEqual(cmd_out, expected_out)
 
-    def testsk_no_haz_n_s(self):
+    def testsk_no_haz_s(self):
         cmd_out, expected_out = test_generic("testsk-no-haz", simpy=1)
         self.assertEqual(cmd_out, expected_out)
 
-    def testjmp_n_s(self):
+    def testjmp_s(self):
         cmd_out, expected_out = test_generic("testjmp", simpy=1)
         self.assertEqual(cmd_out, expected_out)
 
-    def testboolexpr_n_s(self):
+    def testboolexpr_s(self):
         cmd_out, expected_out = test_generic("boolexpr", simpy=1)
         self.assertEqual(cmd_out, expected_out)
 
-    def testisort10_n_s(self):
+    def testisort10_s(self):
         cmd_out, expected_out = test_generic("insertion-sort-10", simpy=1)
         self.assertEqual(cmd_out, expected_out)
 
-    def testisort100_n_s(self):
+    def testisort100_s(self):
         cmd_out, expected_out = test_generic("insertion-sort-100", simpy=1)
         self.assertEqual(cmd_out, expected_out)
 
-    def testfun10_n_s(self):
+    def testfun10_s(self):
         cmd_out, expected_out = test_generic("functions10", simpy=1)
         self.assertEqual(cmd_out, expected_out)
 

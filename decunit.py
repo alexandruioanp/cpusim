@@ -15,13 +15,8 @@ class DecUnit:
 
         yield self.env.process(gv.pipeline.get_prev("DECODE").do())
 
-    def wait(self):
-        # print("DECODE WAITING")
-        yield self.env.process(gv.pipeline.get_next("DECODE").wait())
-
     def decode(self):
         self.instr = gv.pipeline.pipe[Stages["DECODE"]]
-        gv.unit_statuses[Stages["DECODE"]] = "BUSY"
 
         if self.instr:
             self.instr.decode()
@@ -29,10 +24,7 @@ class DecUnit:
             # check for jump
             if self.instr.isUncondBranch:
                 gv.fu.jump(self.instr.target)
-                gv.pipeline.pipe[Stages["DECODE"]] = instruction.getNOP()
-                # gv.ROB.popleft()
-                gv.ROB.append(gv.pipeline.pipe[Stages["DECODE"]])
-            else:
-                gv.ROB.append(self.instr)
+                self.instr = instruction.getNOP()
 
-        gv.unit_statuses[Stages["DECODE"]] = "READY"
+            gv.pipeline.pipe[Stages["DECODE"]] = self.instr
+            gv.ROB.append(self.instr)

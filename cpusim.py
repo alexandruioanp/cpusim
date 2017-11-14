@@ -35,7 +35,6 @@ class Computor:
     def run_simpy(self):
         while True:
             yield self.env.process(gv.stages[-1].do())
-            # yield self.env.process(gv.stages[0].wait())
             if gv.debug_timing:
                 print(str(self.env.now) + ": main ticking")
             yield self.env.process(gv.pipeline.advance_yield())
@@ -47,7 +46,6 @@ class Computor:
             print("Cycles taken:", self.env.now)
             print("Instructions executed:", gv.instr_exec)
             print("IPC:", gv.instr_exec / self.env.now)
-
 
     def run_non_pipelined(self):
         if debug:
