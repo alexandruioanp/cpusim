@@ -13,7 +13,7 @@ class FetchUnit:
         self.pc = target
 
     def do(self):
-        self.fetch(1)
+        self.fetch(gv.issue_rate)
         if gv.debug_timing:
             print(str(self.env.now) + ": Fetch")
 
@@ -26,7 +26,7 @@ class FetchUnit:
             for i in instr:
                 i.is_complete = False
 
-            st = gv.pipeline.push(instr[0])
+            st = gv.pipeline.push(instr)
 
             if not st:
                 self.pc += num

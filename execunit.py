@@ -10,29 +10,29 @@ class ExecUnit:
     def do(self):
         self.instr = gv.pipeline.pipe[Stages["EXECUTE"]]
 
+        gv.unit_statuses[Stages["EXECUTE"]] = "BUSY"
         if self.instr:
-            if gv.debug_timing:
-                print("E ", self.env.now)
+            for instr in self.instr:
+                if gv.debug_timing:
+                    print("E ", self.env.now)
 
-            gv.unit_statuses[Stages["EXECUTE"]] = "BUSY"
+                instr.evaluate_operands(self.bypassed)
 
-            self.instr.evaluate_operands(self.bypassed)
+                instr.execute()
 
-            self.instr.execute()
+                yield self.env.timeout(instr.duration - 0.1)
 
-            yield self.env.timeout(self.instr.duration - 0.1)
+                if gv.debug_timing:
+                    print(str(self.env.now) + ": Executed", str(instr))
 
-            if gv.debug_timing:
-                print(str(self.env.now) + ": Executed", str(self.instr))
+                self.bypassed = None
 
-            self.bypassed = None
+                try:
+                    self.bypassed = (instr.dest, instr.result)
+                except AttributeError:
+                    pass
 
-            try:
-                self.bypassed = (self.instr.dest, self.instr.result)
-            except AttributeError:
-                pass
+                instr.is_complete = True
+                gv.instr_exec += 1
 
-            self.instr.is_complete = True
-            gv.instr_exec += 1
-
-            gv.unit_statuses[Stages["EXECUTE"]] = "READY"
+        gv.unit_statuses[Stages["EXECUTE"]] = "READY"
