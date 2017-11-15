@@ -11,11 +11,7 @@ class WBUnit:
         gv.ROB = deque(maxlen=gv.ROB_entries)
 
     def do(self):
-        instr = gv.pipeline.pipe[Stages["WRITEBACK"]]
-
         self.writeback()
-        if instr:
-            self.last_instr = [instr]
 
         if gv.debug_timing:
             print("W ", self.env.now)
@@ -23,6 +19,7 @@ class WBUnit:
         yield self.env.timeout(1)
 
     def writeback(self):
+        self.last_instr = []
         try:
             for i in range(gv.retire_rate):
                 if gv.ROB[0].opcode == "HALT":
@@ -30,12 +27,7 @@ class WBUnit:
                     pass
                 if gv.ROB[0].is_complete:
                     instr = gv.ROB.popleft()
-                    if instr != gv.pipeline.pipe[Stages['WRITEBACK']]:
-                        # print("BADDDDD")
-                        # print(instr, gv.pipeline.pipe[Stages['WRITEBACK']])
-                        pass
                     instr.writeback()
-                    gv.pipeline.pipe[Stages['WRITEBACK']] = None
                     self.last_instr.append(instr)
                 else:
                     break

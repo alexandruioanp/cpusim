@@ -6,18 +6,18 @@ import gv
 Stages = collections.OrderedDict([
         ("FETCH", 0),
         ("DECODE", 1),
-        ("EXECUTE", 2),
-        ("WRITEBACK", 3)])
-
-State = {
-    "OK":     0,
-    "STALL":  1,
-    "WHOOPS": 2
-}
+        ("RS", 2),])
+        # ("WRITEBACK", 3)])
+#
+# State = {
+#     "OK":     0,
+#     "STALL":  1,
+#     "WHOOPS": 2
+# }
 
 class Pipeline:
     def __init__(self, env=None):
-        self.NUM_STAGES = 4
+        self.NUM_STAGES = 3
         self.pipe = [None] * self.NUM_STAGES
         gv.unit_statuses = ["READY"] * self.NUM_STAGES
         self.env = env

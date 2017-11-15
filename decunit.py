@@ -34,7 +34,7 @@ class DecUnit:
                 else:
                     self.last_bundle.append(instr)
 
-            print(self.last_bundle)
+            # print(self.last_bundle)
             gv.pipeline.pipe[Stages["DECODE"]] = self.last_bundle
             gv.ROB.extend(self.last_bundle)
             self.instr_bundle = self.last_bundle

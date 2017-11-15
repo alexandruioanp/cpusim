@@ -6,7 +6,6 @@ import argparse
 from instruction import *
 from fetchunit import *
 from decunit import *
-from execunit import *
 from wbunit import *
 from registerfile import *
 from pipeline import *
@@ -15,7 +14,6 @@ import gv
 debug = True
 debug = False
 
-
 class Computor:
     def __init__(self, program, env=None):
         self._program = program
@@ -23,28 +21,27 @@ class Computor:
         self.fetchunit = FetchUnit(program, self.env)
         gv.fu = self.fetchunit
         self.decodeunit = DecUnit(self.env)
-        self.execunit = ExecUnit(self.env)
         self.wbunit = WBUnit(self.env)
+        self.rs = Reservierungsstation(self.env)
         gv.R = RegisterFile(48)
         self.clock_cnt = 0
         self.print_stats = False
         gv.instr_exec = 0
-        gv.stages = [self.fetchunit, self.decodeunit, self.execunit, self.wbunit]
+        gv.stages = [self.fetchunit, self.decodeunit, self.rs]
 
     def run_simpy(self):
-
         while True:
             self.env.process(gv.pipeline.advance_yield())
-            self.env.process(gv.stages[3].do())  # W
-            if gv.unit_statuses[Stages["EXECUTE"]] == "READY":
-                self.env.process(gv.stages[2].do())  # E
-            self.env.process(gv.stages[1].do())  # F
-            self.env.process(gv.stages[0].do())  # D
+            self.env.process(self.wbunit.do())  # W
+            if gv.unit_statuses[Stages["RS"]] == "READY":
+                self.env.process(gv.stages[2].do())  # RS
+            self.env.process(gv.stages[1].do())  # D
+            self.env.process(gv.stages[0].do())  # F
 
             if gv.debug_timing:
                 print(str(self.env.now) + ": main ticking")
 
-            if self.wbunit.last_instr[-1].opcode == "HALT":
+            if self.wbunit.last_instr and self.wbunit.last_instr[-1].opcode == "HALT":
                 break
 
             yield self.env.timeout(1)
