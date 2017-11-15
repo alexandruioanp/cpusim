@@ -3,8 +3,6 @@
 import re
 import argparse
 
-import simpy
-
 from instruction import *
 from fetchunit import *
 from decunit import *
@@ -16,6 +14,7 @@ import gv
 
 debug = True
 debug = False
+
 
 class Computor:
     def __init__(self, program, env=None):
@@ -34,21 +33,7 @@ class Computor:
 
     def run_simpy(self):
 
-        events = []
-
-        # events.append(self.env.process(gv.stages[3].do())) # W
-        # events.append(self.env.process(gv.stages[2].do())) # E
-        # events.append(self.env.process(gv.pipeline.advance_yield()))
-        # events.append(self.env.process(gv.stages[1].do())) # F
-        # events.append(self.env.process(gv.stages[0].do())) # D
-        # events.append(self.env.process(gv.stages[3].do()))  # W
-        # events.append(self.env.process(gv.stages[2].do()))  # E
-        # events.append(self.env.process(gv.stages[1].do()))  # F
-        # events.append(self.env.process(gv.stages[0].do()))  # D
-        # events.append(self.env.process(gv.pipeline.advance_yield()))>
-
         while True:
-
             self.env.process(gv.pipeline.advance_yield())
             self.env.process(gv.stages[3].do())  # W
             if gv.unit_statuses[Stages["EXECUTE"]] == "READY":
@@ -60,13 +45,7 @@ class Computor:
                 print(str(self.env.now) + ": main ticking")
 
             if self.wbunit.last_instr[-1].opcode == "HALT":
-                # for ev in events:
-                #     ev.interrupt()
-                # break
                 break
-
-            if self.env.now == 26:
-                a = 3 + 2
 
             yield self.env.timeout(1)
 
@@ -75,6 +54,7 @@ class Computor:
             print("Cycles taken:", self.env.now)
             print("Instructions executed:", gv.instr_exec)
             print("IPC:", gv.instr_exec / self.env.now)
+
 
 def assemble(asm, program):
     label_targets = {}
@@ -154,6 +134,7 @@ def main(args):
 
     # if debug:
         # print_data_mem()
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()

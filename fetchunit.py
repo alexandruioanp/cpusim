@@ -13,15 +13,11 @@ class FetchUnit:
         self.pc = target
 
     def do(self):
-        try:
-            # while True:
-            self.fetch(1)
-            if gv.debug_timing:
-                print(str(self.env.now) + ": Fetch")
+        self.fetch(1)
+        if gv.debug_timing:
+            print(str(self.env.now) + ": Fetch")
 
-            yield self.env.timeout(1)
-        except simpy.Interrupt:
-            return
+        yield self.env.timeout(1)
 
     def fetch(self, num):
         instr = self.instruction_stream[self.pc:self.pc + num]
@@ -31,9 +27,7 @@ class FetchUnit:
                 i.is_complete = False
 
             st = gv.pipeline.push(instr[0])
-            if instr[0].opcode == "HALT":
-                pass
-                a = 1 + 2
+
             if not st:
                 self.pc += num
             else:

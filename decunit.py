@@ -9,16 +9,12 @@ class DecUnit:
         self.last_instr = None
 
     def do(self):
-        try:
-            # while True:
-            self.decode()
+        self.decode()
 
-            if gv.debug_timing:
-                print(str(self.env.now) + ": Issued (Decode)", str(self.instr))
+        if gv.debug_timing:
+            print(str(self.env.now) + ": Issued (Decode)", str(self.instr))
 
-            yield self.env.timeout(1)
-        except simpy.Interrupt:
-            return
+        yield self.env.timeout(1)
 
     def decode(self):
         self.instr = gv.pipeline.pipe[Stages["DECODE"]]

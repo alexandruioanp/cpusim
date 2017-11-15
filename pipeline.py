@@ -50,12 +50,8 @@ class Pipeline:
         return gv.stages[self.get_next_idx(name)]
 
     def advance_yield(self):
-        try:
-            # while True:
-            self.advance()
-            yield self.env.timeout(1)
-        except simpy.Interrupt:
-            return
+        self.advance()
+        yield self.env.timeout(1)
 
     def advance(self):
         if self.pipe[-1]:

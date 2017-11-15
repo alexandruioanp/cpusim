@@ -11,21 +11,16 @@ class WBUnit:
         gv.ROB = deque(maxlen=gv.ROB_entries)
 
     def do(self):
-        # print("WB", self.env.now)
-        try:
-            # while True:
-            instr = gv.pipeline.pipe[Stages["WRITEBACK"]]
+        instr = gv.pipeline.pipe[Stages["WRITEBACK"]]
 
-            self.writeback()
-            if instr:
-                self.last_instr = [instr]
+        self.writeback()
+        if instr:
+            self.last_instr = [instr]
 
-            if gv.debug_timing:
-                print("W ", self.env.now)
+        if gv.debug_timing:
+            print("W ", self.env.now)
 
-            yield self.env.timeout(1)
-        except simpy.Interrupt:
-            return
+        yield self.env.timeout(1)
 
     def writeback(self):
         try:
