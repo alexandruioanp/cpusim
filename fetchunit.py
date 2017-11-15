@@ -27,15 +27,17 @@ class FetchUnit:
         instr = self.instruction_stream[self.pc:self.pc + num]
 
         if instr:
+            for i in instr:
+                i.is_complete = False
+
             st = gv.pipeline.push(instr[0])
-            print(instr[0])
             if instr[0].opcode == "HALT":
                 pass
                 a = 1 + 2
             if not st:
                 self.pc += num
             else:
-                print("Couldn't fetch new instruction - pipeline stalled")
+                # print("Couldn't fetch new instruction - pipeline stalled")
                 pass
 
     def get_from_stream(self, num):

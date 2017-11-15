@@ -56,7 +56,6 @@ class Computor:
             self.env.process(gv.stages[1].do())  # F
             self.env.process(gv.stages[0].do())  # D
 
-
             if gv.debug_timing:
                 print(str(self.env.now) + ": main ticking")
 
@@ -66,9 +65,10 @@ class Computor:
                 # break
                 break
 
+            if self.env.now == 26:
+                a = 3 + 2
+
             yield self.env.timeout(1)
-
-
 
         if self.print_stats:
             print("*************************************")

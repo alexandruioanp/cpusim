@@ -24,7 +24,7 @@ class ExecUnit:
 
                 self.instr.execute()
 
-                yield self.env.timeout(self.instr.duration)
+                yield self.env.timeout(self.instr.duration - 0.1)
 
                 if gv.debug_timing:
                     print(str(self.env.now) + ": Executed", str(self.instr))
@@ -40,8 +40,9 @@ class ExecUnit:
                 gv.instr_exec += 1
 
                 gv.unit_statuses[Stages["EXECUTE"]] = "READY"
+                # yield self.env.timeout(0.1)
                 # yield self.env.timeout(1)
-            else:
-                yield self.env.timeout(1)
+            # else:
+                # yield self.env.timeout(1)
         except simpy.Interrupt:
             return

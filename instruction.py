@@ -97,7 +97,7 @@ class BRANCHInstruction(Instruction):
 class MEMInstruction(Instruction):
     def __init__(self, *args, **kwargs):
         super(MEMInstruction, self).__init__(*args, **kwargs)
-        self.duration = 1
+        self.duration = 5
 
 
 class JMPInstruction(BRANCHInstruction):
@@ -185,7 +185,7 @@ class STOREInstruction(MEMInstruction):
 
 
 # LOAD R5,R0,8 (src <- dest + offset)
-class LOADInstruction(WRITEBACKInstruction):
+class LOADInstruction(WRITEBACKInstruction, MEMInstruction):
     def decode(self):
         self.dest = self.operands[0]
         self.src = list(self.operands[1:])
