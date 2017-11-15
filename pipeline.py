@@ -17,9 +17,8 @@ Stages = collections.OrderedDict([
 
 class Pipeline:
     def __init__(self, env=None):
-        self.NUM_STAGES = 3
-        self.pipe = [None] * self.NUM_STAGES
-        gv.unit_statuses = ["READY"] * self.NUM_STAGES
+        self.NUM_STAGES = 2
+        self.pipe = [collections.deque()] * self.NUM_STAGES
         self.env = env
 
     def __str__(self):
@@ -28,6 +27,19 @@ class Pipeline:
             string += "("  + list(Stages.keys())[idx][0] + ": " + str(instr) + ") "
 
         return string
+
+    def issue(self, instr_list):
+        while instr_list:
+            if gv.stages[Stages["RS"]].status == "READY": # slot available in RS, issue
+                instr = instr_list.popleft()
+                gv.ROB.append(instr)
+                st = gv.stages[Stages["RS"]].push(instr)
+                if st:
+                    print("RS cannot accept more")
+            else:
+                yield self.env.timeout(1)
+
+
 
     def get_prev_idx(self, name):
         idx = Stages[name]
@@ -59,7 +71,7 @@ class Pipeline:
             pass
         else:
             for i in reversed(range(1, self.NUM_STAGES)):
-                if gv.unit_statuses[i] == "READY" and gv.unit_statuses[i - 1] == "READY":
+                if gv.stages[i].status == "READY" and gv.stages[i - 1].status == "READY":
                     self.pipe[i] = self.pipe[i - 1]
                     self.pipe[i - 1] = None
                 else:

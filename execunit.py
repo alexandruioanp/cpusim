@@ -3,18 +3,19 @@ from pipeline import *
 import simpy
 
 class ExecUnit:
-    def __init__(self, env):
+    def __init__(self, env, id):
         self.env = env
         self.bypassed = None
+        self.id = id
         self.status = "READY"
 
-    def do(self):
-        self.instr = gv.pipeline.pipe[Stages["EXECUTE"]]
-
+    def do(self, instr):
         self.status = "BUSY"
-        if self.instr:
+        if instr:
+            self.instr = instr
+
             if gv.debug_timing:
-                print("E ", self.env.now)
+                print("E" + str(self.id), self.env.now)
 
             instr.evaluate_operands(self.bypassed)
 

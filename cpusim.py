@@ -9,6 +9,7 @@ from decunit import *
 from wbunit import *
 from registerfile import *
 from pipeline import *
+from reservierungsstation import *
 import gv
 
 debug = True
@@ -22,7 +23,7 @@ class Computor:
         gv.fu = self.fetchunit
         self.decodeunit = DecUnit(self.env)
         self.wbunit = WBUnit(self.env)
-        self.rs = Reservierungsstation(self.env)
+        self.rs = Reservierungsstation(self.env, gv.issue_rate)
         gv.R = RegisterFile(48)
         self.clock_cnt = 0
         self.print_stats = False
@@ -33,9 +34,10 @@ class Computor:
         while True:
             self.env.process(gv.pipeline.advance_yield())
             self.env.process(self.wbunit.do())  # W
-            if gv.unit_statuses[Stages["RS"]] == "READY":
-                self.env.process(gv.stages[2].do())  # RS
-            self.env.process(gv.stages[1].do())  # D
+            if self.rs.status == "READY":
+                self.env.process(self.rs.do())  # RS
+            if self.decodeunit.status == "READY":
+                self.env.process(gv.stages[1].do())  # D
             self.env.process(gv.stages[0].do())  # F
 
             if gv.debug_timing:

@@ -97,7 +97,7 @@ class BRANCHInstruction(Instruction):
 class MEMInstruction(Instruction):
     def __init__(self, *args, **kwargs):
         super(MEMInstruction, self).__init__(*args, **kwargs)
-        self.duration = 5
+        self.duration = 1
 
 
 class JMPInstruction(BRANCHInstruction):

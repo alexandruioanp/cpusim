@@ -8,6 +8,7 @@ class FetchUnit:
         self.env = env
         self.pc = 0
         self.instruction_stream = istream
+        self.status = "READY"
 
     def jump(self, target):
         self.pc = target
