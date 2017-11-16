@@ -26,7 +26,7 @@ class WBUnit:
                 if gv.ROB[0].is_complete:
                     instr = gv.ROB.popleft()
                     instr.writeback()
-                    print(instr)
+                    # print(instr)
                     self.last_instr.append(instr)
                     gv.retired += 1
                 else:

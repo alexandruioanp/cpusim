@@ -45,8 +45,31 @@ class Instruction():
         self.dest = []
         self.duration = 1
 
-        self.is_complete = False
-        self.is_speculative = False
+        self.isComplete = False
+        self.canDispatch = True
+
+    def get_reg_nums(self):
+        regs_src = []
+        regs_dest = []
+
+        for op in self.src:
+            try:
+                if op[0] == "R":
+                    reg_num = int(op[1:])
+                    regs_src.append(reg_num)
+            except TypeError:
+                pass  # is literal
+
+        op = self.dest
+        if op:
+            try:
+                if op[0] == "R":
+                    reg_num = int(op[1:])
+                    regs_dest.append(reg_num)
+            except TypeError:
+                pass  # is literal
+
+        return {"src": regs_src, "dest": regs_dest}
 
     def decode(self):
         pass
@@ -141,7 +164,6 @@ class CONDBRANCHInstruction(BRANCHInstruction):
 
 class WRITEBACKInstruction(Instruction):
     def writeback(self):
-
         if debug:
             print("WRITING", str(self))
             print(self.dest)

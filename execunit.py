@@ -8,9 +8,12 @@ class ExecUnit:
         self.bypassed = None
         self.id = id
         self.status = "READY"
+        self.instr = None
 
     def do(self, instr):
         self.status = "BUSY"
+        self.bypassed = None
+
         if instr:
             self.instr = instr
 
