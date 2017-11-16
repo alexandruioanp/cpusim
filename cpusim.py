@@ -52,6 +52,7 @@ class Computor:
             print("*************************************")
             print("Cycles taken:", self.env.now)
             print("Instructions executed:", gv.instr_exec)
+            print("Instructions retired:", gv.retired)
             print("IPC:", gv.instr_exec / self.env.now)
 
 

@@ -10,8 +10,9 @@ class Reservierungsstation:
         self.num_eu = num_eu
         self.execUnits = []
         self.buffer_size = 16
-        self.shelved_instr = deque(maxlen=self.buffer_size)
+        self.shelved_instr = deque()
         self.status = "READY"
+        self.result_bus = []
 
         for i in range(num_eu):
             self.execUnits.append(ExecUnit(self.env, i))
@@ -21,7 +22,6 @@ class Reservierungsstation:
             self.shelved_instr.append(instr)
             return 0
         else:
-            self.status = "BUSY"
             return 1
 
     # check if instructions can go ahead, push them to available execution units

@@ -7,5 +7,5 @@ instr_exec = 0
 debug_timing = False
 issue_rate = 2
 ROB = None
-ROB_entries = 16
+ROB_entries = 20
 retire_rate = issue_rate

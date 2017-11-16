@@ -97,7 +97,7 @@ class BRANCHInstruction(Instruction):
 class MEMInstruction(Instruction):
     def __init__(self, *args, **kwargs):
         super(MEMInstruction, self).__init__(*args, **kwargs)
-        self.duration = 1
+        self.duration = 5
 
 
 class JMPInstruction(BRANCHInstruction):
@@ -134,7 +134,7 @@ class CONDBRANCHInstruction(BRANCHInstruction):
         if self.operator(self.operand_vals[0], 0):
             gv.fu.jump(self.target)
 
-            gv.pipeline.pipe[Stages["DECODE"]] = getNOP()
+            gv.pipeline.pipe[Stages["DECODE"]] = getNOP() # here
         else:
             pass
 
@@ -256,6 +256,7 @@ class DIVInstruction(WRITEBACKInstruction):
     def decode(self):
         self.dest = self.operands[0]
         self.src = list(self.operands[1:])
+        self.duration = 3
 
     def execute(self):
         self.result = int(self.operand_vals[0] / self.operand_vals[1])

@@ -66,16 +66,12 @@ class Pipeline:
         yield self.env.timeout(1)
 
     def advance(self):
-        if self.pipe[-1]:
-            print("<<WARN>> instr", self.pipe[-1], "not retired")
-            pass
-        else:
-            for i in reversed(range(1, self.NUM_STAGES)):
-                if gv.stages[i].status == "READY" and gv.stages[i - 1].status == "READY":
-                    self.pipe[i] = self.pipe[i - 1]
-                    self.pipe[i - 1] = None
-                else:
-                    break
+        for i in reversed(range(1, self.NUM_STAGES)):
+            if gv.stages[i].status == "READY" and gv.stages[i - 1].status == "READY":
+                self.pipe[i] = self.pipe[i - 1]
+                self.pipe[i - 1] = None
+            else:
+                break
 
     def push(self, instr):
         if self.pipe[0]:
