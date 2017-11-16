@@ -8,7 +8,7 @@ class WBUnit:
     def __init__(self, env):
         self.env = env
         self.last_instr = [instruction.getNOP()]
-        gv.ROB = deque(maxlen=gv.ROB_entries)
+        gv.ROB = deque()
         gv.retired = 0
 
     def do(self):

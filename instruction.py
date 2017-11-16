@@ -31,9 +31,11 @@ class Instruction():
         comps = asm.split(' ')
         self.opcode = comps[0]
 
-        self.isBranch = True if self.opcode in ["BGEZ", "BLTZ", "BEQZ", "BNEZ", "JMP", "JUMP"] else False
-        self.isUncondBranch = True if self.opcode in ["JMP"] else False # , "JUMP"
+        self.isBranch = self.opcode in ["BGEZ", "BLTZ", "BEQZ", "BNEZ", "JMP", "JUMP"]
+        self.isUncondBranch = self.opcode in ["JMP"] # , "JUMP"
         self.isCondBranch = not self.isUncondBranch
+        self.isStore = self.opcode == "STORE"
+        self.isLoad = self.opcode == "LOAD"
 
         if len(comps) > 1:
             self.operands = comps[1]
