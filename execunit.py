@@ -36,7 +36,7 @@ class ExecUnit:
             except AttributeError:
                 pass
 
-            instr.is_complete = True
+            instr.isExecuted = True
             gv.instr_exec += 1
 
         self.status = "READY"

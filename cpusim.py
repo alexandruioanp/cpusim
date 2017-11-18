@@ -46,6 +46,9 @@ class Computor:
             if self.wbunit.last_instr and self.wbunit.last_instr[-1].opcode == "HALT":
                 break
 
+            if self.env.now == 10:
+                a = 1 +2
+
             yield self.env.timeout(1)
 
         if self.print_stats:

@@ -36,6 +36,7 @@ class Instruction():
         self.isCondBranch = not self.isUncondBranch
         self.isStore = self.opcode == "STORE"
         self.isLoad = self.opcode == "LOAD"
+        self.isMemAccess = self.isStore or self.isLoad
 
         if len(comps) > 1:
             self.operands = comps[1]
@@ -47,7 +48,8 @@ class Instruction():
         self.dest = []
         self.duration = 1
 
-        self.isComplete = False
+        self.isExecuted = False
+        self.isRetired = False
         self.canDispatch = True
 
     def get_reg_nums(self):
@@ -164,7 +166,7 @@ class CONDBRANCHInstruction(BRANCHInstruction):
             pass
 
 
-class WRITEBACKInstruction(Instruction):
+class REGWRITEBACKInstruction(Instruction):
     def writeback(self):
         if debug:
             print("WRITING", str(self))
@@ -172,7 +174,7 @@ class WRITEBACKInstruction(Instruction):
         gv.R.set(int(self.dest[1:]), self.result)
 
 
-class XORInstruction(WRITEBACKInstruction):
+class XORInstruction(REGWRITEBACKInstruction):
     def decode(self):
         self.dest = self.operands[0]
         self.src = list(self.operands[1:])
@@ -184,11 +186,15 @@ class XORInstruction(WRITEBACKInstruction):
 class WRSInstruction(Instruction):
     def decode(self):
         self.src = [int(self.operands[0])]
+        self.result = ""
 
     def execute(self):
         while gv.data_mem[self.operand_vals[0]]:
-            sys.stdout.write(chr(gv.data_mem[self.operand_vals[0]])),
+            self.result += chr(gv.data_mem[self.operand_vals[0]])
             self.operand_vals[0] += 1
+
+    def writeback(self):
+        sys.stdout.write(self.result),
 
 
 # STORE R5,R3,0 (src -> dest + offset)
@@ -197,19 +203,24 @@ class STOREInstruction(MEMInstruction):
         self.src = list(self.operands)
 
     def execute(self):
-        a = self.operand_vals[0] & 0xFF
+        a = self.operand_vals[0]         & 0xFF
         b = (self.operand_vals[0] >> 8)  & 0xFF
         c = (self.operand_vals[0] >> 16) & 0xFF
         d = (self.operand_vals[0] >> 24) & 0xFF
 
-        gv.data_mem[self.operand_vals[1] + self.operand_vals[2] + 0] = a
-        gv.data_mem[self.operand_vals[1] + self.operand_vals[2] + 1] = b
-        gv.data_mem[self.operand_vals[1] + self.operand_vals[2] + 2] = c
-        gv.data_mem[self.operand_vals[1] + self.operand_vals[2] + 3] = d
+        i0 = self.operand_vals[1] + self.operand_vals[2] + 0
+        i1 = self.operand_vals[1] + self.operand_vals[2] + 1
+        i2 = self.operand_vals[1] + self.operand_vals[2] + 2
+        i3 = self.operand_vals[1] + self.operand_vals[2] + 3
+
+        gv.data_mem[i0] = a
+        gv.data_mem[i1] = b
+        gv.data_mem[i2] = c
+        gv.data_mem[i3] = d
 
 
 # LOAD R5,R0,8 (src <- dest + offset)
-class LOADInstruction(WRITEBACKInstruction, MEMInstruction):
+class LOADInstruction(REGWRITEBACKInstruction, MEMInstruction):
     def decode(self):
         self.dest = self.operands[0]
         self.src = list(self.operands[1:])
@@ -226,7 +237,7 @@ class LOADInstruction(WRITEBACKInstruction, MEMInstruction):
             self.result = -((0xFFFFFFFF^self.result) + 1)
 
 # LDI R2,76 (dest = imm)
-class LDIInstruction(WRITEBACKInstruction):
+class LDIInstruction(REGWRITEBACKInstruction):
     def decode(self):
         self.dest = self.operands[0]
         self.src = list(self.operands[1:])
@@ -241,11 +252,13 @@ class WRInstruction(Instruction):
         self.src = list(self.operands)
 
     def execute(self):
-        sys.stdout.write(str(self.operand_vals[0]))
+        self.result = str(self.operand_vals[0])
 
+    def writeback(self):
+        sys.stdout.write(self.result)
 
 # SUBI R6,R1,0 (dest = src - imm) /// SUB R5,R2,R0 (dest = src1 - src2)
-class SUBInstruction(WRITEBACKInstruction):
+class SUBInstruction(REGWRITEBACKInstruction):
     def decode(self):
         self.dest = self.operands[0]
         self.src = list(self.operands[1:])
@@ -255,7 +268,7 @@ class SUBInstruction(WRITEBACKInstruction):
 
 
 # ADDI R6,R1,0 (dest = src + imm) /// ADD R6,R1,R2 (dest = src1 + src2)
-class ADDInstruction(WRITEBACKInstruction):
+class ADDInstruction(REGWRITEBACKInstruction):
     def decode(self):
         self.dest = self.operands[0]
         self.src = list(self.operands[1:])
@@ -265,7 +278,7 @@ class ADDInstruction(WRITEBACKInstruction):
 
 
 # ADDI R6,R1,0 (dest = src + imm) /// ADD R6,R1,R2 (dest = src1 + src2)
-class MULInstruction(WRITEBACKInstruction):
+class MULInstruction(REGWRITEBACKInstruction):
     def decode(self):
         self.dest = self.operands[0]
         self.src = list(self.operands[1:])
@@ -276,7 +289,7 @@ class MULInstruction(WRITEBACKInstruction):
 
 
 # ADDI R6,R1,0 (dest = src + imm) /// ADD R6,R1,R2 (dest = src1 + src2)
-class DIVInstruction(WRITEBACKInstruction):
+class DIVInstruction(REGWRITEBACKInstruction):
     def decode(self):
         self.dest = self.operands[0]
         self.src = list(self.operands[1:])

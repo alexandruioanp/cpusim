@@ -25,7 +25,8 @@ class FetchUnit:
 
         if instr:
             for i in instr:
-                i.is_complete = False
+                i.isExecuted = False
+                i.isRetired = False
 
             st = gv.pipeline.push(instr)
 

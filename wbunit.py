@@ -23,10 +23,11 @@ class WBUnit:
         self.last_instr = []
         try:
             for i in range(gv.retire_rate):
-                if gv.ROB[0].is_complete:
+                if gv.ROB[0].isExecuted:
                     instr = gv.ROB.popleft()
                     instr.writeback()
                     # print(instr)
+                    instr.isRetired = True
                     self.last_instr.append(instr)
                     gv.retired += 1
                 else:
