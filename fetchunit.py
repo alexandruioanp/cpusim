@@ -11,6 +11,9 @@ class FetchUnit:
         self.status = "READY"
 
     def jump(self, target):
+        if target > len(self.instruction_stream):
+            raise Exception("Jumped to illegal address " + str(target))
+
         self.pc = target
 
     def do(self):

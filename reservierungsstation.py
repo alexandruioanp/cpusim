@@ -1,5 +1,3 @@
-from gi.overrides._gi_gst import memdump
-
 import gv
 from execunit import *
 from registerfile import *
@@ -30,30 +28,23 @@ class Reservierungsstation:
             return 1
 
     def dispatch_check(self, instr):
-        # print(instr, "uses", instr.get_reg_nums())
-        all_src_regs_free = gv.R.all_available(instr.get_reg_nums()["src"])
-
-        shelved_dests = []
-        shelved_srcs = []
-        for x in self.shelved_instr:
-            if x == instr:
-                break
-            shelved_dests.extend(x.get_reg_nums()["dest"])
-            shelved_srcs.extend(x.get_reg_nums()["src"])
-
-        in_flight_dests = []
-        in_flight_srcs = []
-        for x in self.instr_in_flight:
-            if x == instr:
-                break
-            in_flight_dests.extend(x.get_reg_nums()["dest"])
-            in_flight_srcs.extend(x.get_reg_nums()["src"])
-
-        # print("Destinations in shelved instructions pre-instr:", shelved_dests)
-        # print("Sources in shelved instructions pre-instr:", shelved_srcs)
-        # print("Destinations in flight instructions pre-instr:", in_flight_dests)
-        # print("Sources in flight instructions pre-instr:", in_flight_dests)
-
+        #
+        # shelved_dests = []
+        # shelved_srcs = []
+        # for x in self.shelved_instr:
+        #     if x == instr:
+        #         break
+        #     shelved_dests.extend(x.get_reg_nums()["dest"])
+        #     shelved_srcs.extend(x.get_reg_nums()["src"])
+        #
+        # in_flight_dests = []
+        # in_flight_srcs = []
+        # for x in self.instr_in_flight:
+        #     if x == instr:
+        #         break
+        #     in_flight_dests.extend(x.get_reg_nums()["dest"])
+        #     in_flight_srcs.extend(x.get_reg_nums()["src"])
+        #
         mem_access_before_instr = False
         for x in self.shelved_instr:
             if x == instr:
@@ -61,27 +52,31 @@ class Reservierungsstation:
             if x.isMemAccess:
                 mem_access_before_instr = True
                 break
+        #
+        # # shelf test ok?
+        # #   s     s   Y
+        # #   s     d   N
+        # #   d     s   N
+        # #   d     d   N
+        #
+        # dependency_in_shelf = any(y in shelved_dests for y in instr.get_reg_nums()["src"]) or \
+        #                       any(y in shelved_dests for y in instr.get_reg_nums()["dest"]) or \
+        #                       any(y in shelved_srcs for y in instr.get_reg_nums()["dest"])
+        #
+        # dependency_in_flight = any(y in in_flight_dests for y in instr.get_reg_nums()["src"]) or \
+        #                        any(y in in_flight_dests for y in instr.get_reg_nums()["dest"]) or \
+        #                        any(y in in_flight_srcs for y in instr.get_reg_nums()["dest"])
 
-        # shelf test ok?
-        #   s     s   Y
-        #   s     d   N
-        #   d     s   N
-        #   d     d   N
-
-        dependency_in_shelf = any(y in shelved_dests for y in instr.get_reg_nums()["src"]) or \
-                              any(y in shelved_dests for y in instr.get_reg_nums()["dest"]) or \
-                              any(y in shelved_srcs for y in instr.get_reg_nums()["dest"])
-
-        dependency_in_flight = any(y in in_flight_dests for y in instr.get_reg_nums()["src"]) or \
-                               any(y in in_flight_dests for y in instr.get_reg_nums()["dest"]) or \
-                               any(y in in_flight_srcs for y in instr.get_reg_nums()["dest"])
-
+        all_src_regs_free = gv.R.all_available(instr.get_reg_nums()["src"], instr)
+        all_dest_regs_free = gv.R.all_available(instr.get_reg_nums()["dest"], instr)
         mem_access_in_flight = any(y.isMemAccess for y in self.instr_in_flight)
 
         # if instr.isMemAccess:
         #     print(instr, mem_access_in_flight, self.instr_in_flight)
 
-        instr.canDispatch = all_src_regs_free and not dependency_in_shelf and not dependency_in_flight \
+        # instr.canDispatch = all_src_regs_free and not dependency_in_shelf and not dependency_in_flight \
+        #                     and not (instr.isMemAccess and (mem_access_in_flight or mem_access_before_instr))
+        instr.canDispatch = all_src_regs_free and all_dest_regs_free \
                             and not (instr.isMemAccess and (mem_access_in_flight or mem_access_before_instr))
 
     # check if instructions can go ahead, push them to available execution units
@@ -92,7 +87,7 @@ class Reservierungsstation:
             if instr.isRetired:
                 self.instr_in_flight.remove(instr)
                 # print("Unlocking", instr.get_reg_nums()["dest"], "from", instr)
-                gv.R.unlock_regs(instr.get_reg_nums()["dest"])
+                gv.R.unlock_regs(instr.get_reg_nums()["dest"], instr)
 
         for eu in self.execUnits:
                 if eu.status == "READY" and eu.instr: # finished and not processed
@@ -108,10 +103,11 @@ class Reservierungsstation:
                     self.dispatch_check(instr)
                     if instr.canDispatch:
                         # lock dest regs
-                        gv.R.lock_regs(instr.get_reg_nums()["dest"])
+                        # gv.R.lock_regs(instr.get_reg_nums()["dest"])
                         #dispatch
                         self.instr_in_flight.append(instr)
                         self.shelved_instr.remove(instr)
+                        gv.R.lock_regs(instr.get_reg_nums()["dest"], instr)
                         self.env.process(eu.do(instr))
                         break
                     else:
