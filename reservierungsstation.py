@@ -87,17 +87,15 @@ class Reservierungsstation:
         for instr in list(self.instr_in_flight):
             if instr.isRetired:
                 self.instr_in_flight.remove(instr)
-                # print("Unlocking", instr.get_reg_nums()["dest"], "from", instr)
+                # potential performance enhancement
                 # gv.R.unlock_regs(instr.get_reg_nums()["dest"], instr)
-                # gv.R.unlock_regs(instr.get_reg_nums()["src"], instr)
-
                 gv.R.unlock_regs(instr.get_reg_nums()["dest"] + instr.get_reg_nums()["src"], instr)
 
         for eu in self.execUnits:
                 if eu.status == "READY" and eu.instr: # finished and not processed
                     # get bypassed results
-                    # print(eu.bypassed)
-                    # unlock dest regs
+                    # potential performance enhancement
+                    # gv.R.unlock_regs(instr.get_reg_nums()["src"], instr)
                     eu.instr = None # mark as processed
 
         for eu in self.execUnits:
@@ -106,14 +104,9 @@ class Reservierungsstation:
                 for instr in list(self.shelved_instr):
                     self.dispatch_check(instr)
                     if instr.canDispatch:
-                        # lock dest regs
-                        # gv.R.lock_regs(instr.get_reg_nums()["dest"])
                         #dispatch
                         self.instr_in_flight.append(instr)
                         self.shelved_instr.remove(instr)
-                        # gv.R.lock_regs(instr.get_reg_nums()["dest"], instr)
-                        # gv.R.lock_regs(instr.get_reg_nums()["src"], instr)
-                        gv.R.lock_regs(instr.get_reg_nums()["dest"] + instr.get_reg_nums()["src"], instr)
                         self.env.process(eu.do(instr))
                         break
                     else:

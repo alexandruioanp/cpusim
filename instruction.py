@@ -33,7 +33,7 @@ class Instruction():
 
         self.isBranch = self.opcode in ["BGEZ", "BLTZ", "BEQZ", "BNEZ", "JMP", "JUMP"]
         self.isUncondBranch = self.opcode in ["JMP"] # , "JUMP"
-        self.isCondBranch = not self.isUncondBranch
+        self.isCondBranch = self.opcode in ["BGEZ", "BLTZ", "BEQZ", "BNEZ"]
         self.isStore = self.opcode == "STORE"
         self.isLoad = self.opcode == "LOAD"
         self.isMemAccess = self.isStore or self.isLoad
@@ -50,6 +50,7 @@ class Instruction():
 
         self.isExecuted = False
         self.isRetired = False
+        self.isTaken = False
         self.canDispatch = True
 
     def get_reg_nums(self):
@@ -160,8 +161,8 @@ class CONDBRANCHInstruction(BRANCHInstruction):
     def execute(self):
         if self.operator(self.operand_vals[0], 0):
             gv.fu.jump(self.target)
-
-            gv.pipeline.pipe[Stages["DECODE"]] = getNOP() # here
+            self.isTaken = True
+            # gv.pipeline.pipe[Stages["DECODE"]] = getNOP() # here
         else:
             pass
 

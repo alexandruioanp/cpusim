@@ -22,8 +22,8 @@ class RegisterFile:
             self.lock_reg(reg, instr)
 
     def unlock_reg(self, reg, instr):
-        if self.available[reg]:
-            raise Exception(str(instr) + " trying to unlock register " + str(reg) + " never locked")
+        # if self.available[reg]:
+        #     raise Exception(str(instr) + " trying to unlock register " + str(reg) + " never locked")
 
         if self.locked_by[reg] and self.locked_by[reg] != instr:
             raise Exception(str(instr) + " trying to unlock register " + str(reg) +\
@@ -45,4 +45,3 @@ class RegisterFile:
                 return False
 
         return True
-        # return all(map(lambda x: self.is_available(x, instr), lst))

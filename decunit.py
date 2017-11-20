@@ -20,7 +20,6 @@ class DecUnit:
             return
 
         if self.instr_bundle != self.last_bundle:
-            # self.last_bundle = deque(maxlen=gv.issue_rate)
             self.last_bundle = deque()
             for idx, instr in enumerate(self.instr_bundle):
                 instr.decode()
@@ -37,6 +36,7 @@ class DecUnit:
         self.instr_bundle = self.last_bundle
         gv.pipeline.pipe[Stages["DECODE"]] = self.last_bundle
 
+        # TODO: check if there is space in ROB; stall otherwise
         while self.last_bundle:
             instr = self.last_bundle[0] # peek
             st = gv.stages[Stages["RS"]].push(instr)
@@ -47,6 +47,14 @@ class DecUnit:
                 self.last_bundle.popleft()
                 gv.ROB.append(instr)
                 gv.R.lock_regs(instr.get_reg_nums()["dest"] + instr.get_reg_nums()["src"], instr)
-                # gv.R.lock_regs(instr.get_reg_nums()["src"], instr)
+
+                if instr and instr.isCondBranch:
+                    while not instr.isExecuted:
+                        yield self.env.timeout(1)
+                    if instr.isTaken: # flush bundle
+                        self.last_bundle = [instruction.getNOP()]
+                        # gv.pipeline.pipe[Stages["DECODE"]] = [instruction.getNOP()]
+                        break
+
 
         self.status = "READY"
