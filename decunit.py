@@ -46,6 +46,7 @@ class DecUnit:
             else:
                 self.last_bundle.popleft()
                 gv.ROB.append(instr)
-                gv.R.lock_regs(instr.get_reg_nums()["dest"], instr)
+                gv.R.lock_regs(instr.get_reg_nums()["dest"] + instr.get_reg_nums()["src"], instr)
+                # gv.R.lock_regs(instr.get_reg_nums()["src"], instr)
 
         self.status = "READY"

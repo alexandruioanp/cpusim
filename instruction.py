@@ -195,6 +195,7 @@ class WRSInstruction(Instruction):
 
     def writeback(self):
         sys.stdout.write(self.result),
+        sys.stdout.flush()
 
 
 # STORE R5,R3,0 (src -> dest + offset)
@@ -256,6 +257,7 @@ class WRInstruction(Instruction):
 
     def writeback(self):
         sys.stdout.write(self.result)
+        sys.stdout.flush()
 
 # SUBI R6,R1,0 (dest = src - imm) /// SUB R5,R2,R0 (dest = src1 - src2)
 class SUBInstruction(REGWRITEBACKInstruction):

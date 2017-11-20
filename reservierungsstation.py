@@ -68,6 +68,7 @@ class Reservierungsstation:
         #                        any(y in in_flight_srcs for y in instr.get_reg_nums()["dest"])
 
         all_src_regs_free = gv.R.all_available(instr.get_reg_nums()["src"], instr)
+        gv.R.lock_regs(instr.get_reg_nums()["dest"] + instr.get_reg_nums()["src"], instr)
         all_dest_regs_free = gv.R.all_available(instr.get_reg_nums()["dest"], instr)
         mem_access_in_flight = any(y.isMemAccess for y in self.instr_in_flight)
 
@@ -87,7 +88,10 @@ class Reservierungsstation:
             if instr.isRetired:
                 self.instr_in_flight.remove(instr)
                 # print("Unlocking", instr.get_reg_nums()["dest"], "from", instr)
-                gv.R.unlock_regs(instr.get_reg_nums()["dest"], instr)
+                # gv.R.unlock_regs(instr.get_reg_nums()["dest"], instr)
+                # gv.R.unlock_regs(instr.get_reg_nums()["src"], instr)
+
+                gv.R.unlock_regs(instr.get_reg_nums()["dest"] + instr.get_reg_nums()["src"], instr)
 
         for eu in self.execUnits:
                 if eu.status == "READY" and eu.instr: # finished and not processed
@@ -107,7 +111,9 @@ class Reservierungsstation:
                         #dispatch
                         self.instr_in_flight.append(instr)
                         self.shelved_instr.remove(instr)
-                        gv.R.lock_regs(instr.get_reg_nums()["dest"], instr)
+                        # gv.R.lock_regs(instr.get_reg_nums()["dest"], instr)
+                        # gv.R.lock_regs(instr.get_reg_nums()["src"], instr)
+                        gv.R.lock_regs(instr.get_reg_nums()["dest"] + instr.get_reg_nums()["src"], instr)
                         self.env.process(eu.do(instr))
                         break
                     else:
