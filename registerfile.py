@@ -33,7 +33,7 @@ class RegisterFile:
         self.locked_by[reg] = None
 
     def unlock_regs(self, lst, instr):
-        for reg in set(lst):
+        for reg in lst:
             self.unlock_reg(reg, instr)
 
     def is_available(self, reg, instr):

@@ -1,8 +1,7 @@
 import gv
 import simpy
 from pipeline import *
-import instruction
-import copy
+from instruction import *
 
 class FetchUnit:
     def __init__(self, istream, env):
@@ -16,7 +15,7 @@ class FetchUnit:
             raise Exception("Jumped to illegal address " + str(target))
 
         self.pc = target
-        gv.pipeline.pipe[Stages["FETCH"]] = [instruction.getNOP()]
+        gv.pipeline.pipe[Stages["FETCH"]] = [getNOP()]
 
 
     def do(self):
@@ -32,15 +31,7 @@ class FetchUnit:
         if instr:
             instr2 = []
             for i in instr:
-                instr2.append(copy.deepcopy(i))
-
-            for i in instr2:
-                # if i.isExecuted and not i.isRetired:
-                #     print("SHIT")
-
-                i.isExecuted = False
-                i.isRetired = False
-                i.isTaken = False
+                instr2.append(get_instruction(i))
 
             st = gv.pipeline.push(instr2)
 

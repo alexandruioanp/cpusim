@@ -46,7 +46,7 @@ class DecUnit:
             else:
                 self.last_bundle.popleft()
                 gv.ROB.append(instr)
-                gv.R.lock_regs(instr.get_reg_nums()["dest"] + instr.get_reg_nums()["src"], instr)
+                gv.R.lock_regs(instr.get_all_regs_touched(), instr)
 
                 if instr and instr.isCondBranch:
                     while not instr.isExecuted:

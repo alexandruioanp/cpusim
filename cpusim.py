@@ -16,10 +16,10 @@ debug = True
 debug = False
 
 class Computor:
-    def __init__(self, program, env=None):
+    def __init__(self, program, env, clean_asm):
         self._program = program
         self.env = env
-        self.fetchunit = FetchUnit(program, self.env)
+        self.fetchunit = FetchUnit(clean_asm, self.env)
         gv.fu = self.fetchunit
         self.decodeunit = DecUnit(self.env)
         self.wbunit = WBUnit(self.env)
@@ -27,6 +27,7 @@ class Computor:
         gv.R = RegisterFile(48)
         self.clock_cnt = 0
         self.print_stats = False
+        self.clean_asm = clean_asm
         gv.instr_exec = 0
         gv.stages = [self.fetchunit, self.decodeunit, self.rs]
 
@@ -56,7 +57,7 @@ class Computor:
             print("IPC:", gv.instr_exec / self.env.now)
 
 
-def assemble(asm, program):
+def assemble(asm, program, clean):
     label_targets = {}
     same_line_no = []
     addr = 0
@@ -96,6 +97,7 @@ def assemble(asm, program):
         if 'DATA' not in line and ":" not in line:
             instr = get_instruction(line)
             program.append(instr)
+            clean.append(line)
 
 
 def print_data_mem():
@@ -120,11 +122,12 @@ def main(args):
         asm = ass_file.readlines()
 
     program = []
-    assemble(asm, program)
+    clean_asm = []
+    assemble(asm, program, clean_asm)
 
     env = simpy.Environment()
     gv.pipeline = Pipeline(env)
-    pc3000 = Computor(program, env)
+    pc3000 = Computor(program, env, clean_asm)
 
     if args.stats:
         pc3000.print_stats = True
