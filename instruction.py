@@ -33,7 +33,7 @@ class Instruction():
 
         self.isBranch = self.opcode in ["BGEZ", "BLTZ", "BEQZ", "BNEZ", "JMP", "JUMP"]
         self.isUncondBranch = self.opcode in ["JMP"] # , "JUMP"
-        self.isCondBranch = self.opcode in ["BGEZ", "BLTZ", "BEQZ", "BNEZ"]
+        self.isCondBranch = self.opcode in ["BGEZ", "BLTZ", "BEQZ", "BNEZ", "JUMP"]
         self.isStore = self.opcode == "STORE"
         self.isLoad = self.opcode == "LOAD"
         self.isMemAccess = self.isStore or self.isLoad

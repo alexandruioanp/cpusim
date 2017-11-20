@@ -108,7 +108,7 @@ class Reservierungsstation:
                         self.instr_in_flight.append(instr)
                         self.shelved_instr.remove(instr)
                         self.env.process(eu.do(instr))
-                        break
+                        # break
                     else:
                         # print("Couldn't dispatch", self.shelved_instr[0])
                         pass
