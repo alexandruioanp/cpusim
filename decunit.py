@@ -26,7 +26,7 @@ class DecUnit:
 
                 if instr.isUncondBranch:
                     gv.fu.jump(instr.target)
-                    self.last_bundle += ([instruction.getNOP()] * (len(self.instr_bundle) - idx))
+                    self.last_bundle += ([self.getDecodedNOP()] * (len(self.instr_bundle) - idx))
                     break
                 else:
                     self.last_bundle.append(instr)
@@ -52,9 +52,14 @@ class DecUnit:
                     while not instr.isExecuted:
                         yield self.env.timeout(1)
                     if instr.isTaken: # flush bundle
-                        self.last_bundle = [instruction.getNOP()]
+                        self.last_bundle = [self.getDecodedNOP()]
                         # gv.pipeline.pipe[Stages["DECODE"]] = [instruction.getNOP()]
                         break
 
 
         self.status = "READY"
+
+    def getDecodedNOP(self):
+        nop = instruction.getNOP()
+        nop.decode()
+        return nop

@@ -7,7 +7,7 @@ import simpy
 class WBUnit:
     def __init__(self, env):
         self.env = env
-        self.last_instr = [instruction.getNOP()]
+        self.last_instr = []
         gv.ROB = deque()
         gv.retired = 0
 

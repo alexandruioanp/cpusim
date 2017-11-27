@@ -28,34 +28,7 @@ class Instruction():
         return self.opcode + " " + str(self.operands)
 
     def __init__(self, asm):
-        comps = asm.split(' ')
-        self.opcode = comps[0]
-
-        self.isBranch = self.opcode in ["BGEZ", "BLTZ", "BEQZ", "BNEZ", "JMP", "JUMP"]
-        self.isUncondBranch = self.opcode in ["JMP"] # , "JUMP"
-        self.isCondBranch = self.opcode in ["BGEZ", "BLTZ", "BEQZ", "BNEZ", "JUMP"]
-        self.isStore = self.opcode == "STORE"
-        self.isLoad = self.opcode == "LOAD"
-        self.isMemAccess = self.isStore or self.isLoad
-
-        if len(comps) > 1:
-            self.operands = comps[1]
-            self.operands = self.operands.split(',')
-        else:
-            self.operands = ""
-        self.operand_vals = []
-        self.src = []
-        self.dest = []
-        self.duration = 1
-
-        self.isExecuted = False
-        self.isRetired = False
-        self.isTaken = False
-        self.canDispatch = True
-
-        self.srcRegNums = []
-        self.destRegNums = []
-        self.allRegNums = []
+        self.asm = asm
 
     def __get_reg_nums(self):
         regs_src = []
@@ -97,7 +70,34 @@ class Instruction():
         self.allRegNums = list(set(self.srcRegNums + self.destRegNums))
 
     def decode(self):
-        pass
+        comps = self.asm.split(' ')
+        self.opcode = comps[0]
+
+        self.isBranch = self.opcode in ["BGEZ", "BLTZ", "BEQZ", "BNEZ", "JMP", "JUMP"]
+        self.isUncondBranch = self.opcode in ["JMP"]  # , "JUMP"
+        self.isCondBranch = self.opcode in ["BGEZ", "BLTZ", "BEQZ", "BNEZ", "JUMP"]
+        self.isStore = self.opcode == "STORE"
+        self.isLoad = self.opcode == "LOAD"
+        self.isMemAccess = self.isStore or self.isLoad
+
+        if len(comps) > 1:
+            self.operands = comps[1]
+            self.operands = self.operands.split(',')
+        else:
+            self.operands = ""
+        self.operand_vals = []
+        self.src = []
+        self.dest = []
+        self.duration = 1
+
+        self.isExecuted = False
+        self.isRetired = False
+        self.isTaken = False
+        self.canDispatch = True
+
+        self.srcRegNums = []
+        self.destRegNums = []
+        self.allRegNums = []
 
     def evaluate_operands(self, bypass):
         if debug:
@@ -143,13 +143,22 @@ class BRANCHInstruction(Instruction):
 
 
 class MEMInstruction(Instruction):
-    def __init__(self, *args, **kwargs):
-        super(MEMInstruction, self).__init__(*args, **kwargs)
+    def decode(self):
+        super(MEMInstruction, self).decode()
         self.duration = 5
+
+
+class REGWRITEBACKInstruction(Instruction):
+    def writeback(self):
+        if debug:
+            print("WRITING", str(self))
+            print(self.dest)
+        gv.R.set(int(self.dest[1:]), self.result)
 
 
 class JMPInstruction(BRANCHInstruction):
     def decode(self):
+        super(JMPInstruction, self).decode()
         self.target = int(self.operands[0])
         self.set_all_regs_touched()
 
@@ -159,6 +168,7 @@ class JMPInstruction(BRANCHInstruction):
 
 class JUMPInstruction(BRANCHInstruction):
     def decode(self):
+        super(JUMPInstruction, self).decode()
         self.src = [self.operands[0]]
         self.set_all_regs_touched()
 
@@ -168,6 +178,7 @@ class JUMPInstruction(BRANCHInstruction):
 
 class CONDBRANCHInstruction(BRANCHInstruction):
     def decode(self):
+        super(CONDBRANCHInstruction, self).decode()
         self.src = [self.operands[0]]
         self.target = int(self.operands[1])
 
@@ -191,16 +202,9 @@ class CONDBRANCHInstruction(BRANCHInstruction):
             pass
 
 
-class REGWRITEBACKInstruction(Instruction):
-    def writeback(self):
-        if debug:
-            print("WRITING", str(self))
-            print(self.dest)
-        gv.R.set(int(self.dest[1:]), self.result)
-
-
 class XORInstruction(REGWRITEBACKInstruction):
     def decode(self):
+        super(XORInstruction, self).decode()
         self.dest = self.operands[0]
         self.src = list(self.operands[1:])
         self.set_all_regs_touched()
@@ -211,6 +215,7 @@ class XORInstruction(REGWRITEBACKInstruction):
 
 class WRSInstruction(Instruction):
     def decode(self):
+        super(WRSInstruction, self).decode()
         self.src = [int(self.operands[0])]
         self.result = ""
         self.set_all_regs_touched()
@@ -228,6 +233,7 @@ class WRSInstruction(Instruction):
 # STORE R5,R3,0 (src -> dest + offset)
 class STOREInstruction(MEMInstruction):
     def decode(self):
+        super(STOREInstruction, self).decode()
         self.src = list(self.operands)
         self.set_all_regs_touched()
 
@@ -251,6 +257,7 @@ class STOREInstruction(MEMInstruction):
 # LOAD R5,R0,8 (src <- dest + offset)
 class LOADInstruction(REGWRITEBACKInstruction, MEMInstruction):
     def decode(self):
+        super(LOADInstruction, self).decode()
         self.dest = self.operands[0]
         self.src = list(self.operands[1:])
         self.set_all_regs_touched()
@@ -269,6 +276,7 @@ class LOADInstruction(REGWRITEBACKInstruction, MEMInstruction):
 # LDI R2,76 (dest = imm)
 class LDIInstruction(REGWRITEBACKInstruction):
     def decode(self):
+        super(LDIInstruction, self).decode()
         self.dest = self.operands[0]
         self.src = list(self.operands[1:])
         self.set_all_regs_touched()
@@ -280,6 +288,7 @@ class LDIInstruction(REGWRITEBACKInstruction):
 # WR R5
 class WRInstruction(Instruction):
     def decode(self):
+        super(WRInstruction, self).decode()
         self.src = list(self.operands)
         self.set_all_regs_touched()
 
@@ -293,6 +302,7 @@ class WRInstruction(Instruction):
 # SUBI R6,R1,0 (dest = src - imm) /// SUB R5,R2,R0 (dest = src1 - src2)
 class SUBInstruction(REGWRITEBACKInstruction):
     def decode(self):
+        super(SUBInstruction, self).decode()
         self.dest = self.operands[0]
         self.src = list(self.operands[1:])
         self.set_all_regs_touched()
@@ -304,6 +314,7 @@ class SUBInstruction(REGWRITEBACKInstruction):
 # ADDI R6,R1,0 (dest = src + imm) /// ADD R6,R1,R2 (dest = src1 + src2)
 class ADDInstruction(REGWRITEBACKInstruction):
     def decode(self):
+        super(ADDInstruction, self).decode()
         self.dest = self.operands[0]
         self.src = list(self.operands[1:])
         self.set_all_regs_touched()
@@ -315,6 +326,7 @@ class ADDInstruction(REGWRITEBACKInstruction):
 # ADDI R6,R1,0 (dest = src + imm) /// ADD R6,R1,R2 (dest = src1 + src2)
 class MULInstruction(REGWRITEBACKInstruction):
     def decode(self):
+        super(MULInstruction, self).decode()
         self.dest = self.operands[0]
         self.src = list(self.operands[1:])
         self.set_all_regs_touched()
@@ -327,6 +339,7 @@ class MULInstruction(REGWRITEBACKInstruction):
 # ADDI R6,R1,0 (dest = src + imm) /// ADD R6,R1,R2 (dest = src1 + src2)
 class DIVInstruction(REGWRITEBACKInstruction):
     def decode(self):
+        super(DIVInstruction, self).decode()
         self.dest = self.operands[0]
         self.src = list(self.operands[1:])
         self.duration = 3
@@ -336,9 +349,9 @@ class DIVInstruction(REGWRITEBACKInstruction):
         self.result = int(self.operand_vals[0] / self.operand_vals[1])
 
 
-
 class HALTInstruction(Instruction):
     pass
+
 
 class NOPInstruction(Instruction):
     pass
