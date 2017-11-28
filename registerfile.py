@@ -19,15 +19,19 @@ class RegisterFile:
 
     def lock_regs(self, lst, instr):
         for reg in lst:
-            self.lock_reg(reg, instr)
+            if reg != 0:
+                self.lock_reg(reg, instr)
 
     def unlock_reg(self, reg, instr):
+        if reg == 0: # R0 is hardwired to 0
+            return
+
         # if self.available[reg]:
         #     raise Exception(str(instr) + " trying to unlock register " + str(reg) + " never locked")
-
-        if self.locked_by[reg] and self.locked_by[reg] != instr:
-            raise Exception(str(instr) + " trying to unlock register " + str(reg) +\
-                            " locked by " + str(self.locked_by[int(reg)]))
+        #
+        # if self.locked_by[reg] and self.locked_by[reg] != instr:
+        #     raise Exception(str(instr) + " trying to unlock register " + str(reg) +\
+        #                     " locked by " + str(self.locked_by[reg]))
 
         self.available[reg] = True
         self.locked_by[reg] = None
@@ -37,7 +41,17 @@ class RegisterFile:
             self.unlock_reg(reg, instr)
 
     def is_available(self, reg, instr):
-        return self.available[int(reg)] or self.locked_by[int(reg)] == instr
+        return self.available[reg] or self.locked_by[reg] == instr
+
+    def which_locked(self, lst, instr):
+        out = []
+
+        # filter
+        for reg in lst:
+            if not self.is_available(reg, instr):
+                out.append(reg)
+
+        return out
 
     def all_available(self, lst, instr):
         for r in lst:

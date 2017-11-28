@@ -67,13 +67,13 @@ class TestSim(unittest.TestCase):
         cmd_out, expected_out = test_generic("insertion-sort-10")
         self.assertEqual(cmd_out, expected_out)
 
-    def testisort100(self):
-        cmd_out, expected_out = test_generic("insertion-sort-100")
-        self.assertEqual(cmd_out, expected_out)
+    # def testisort100(self):
+    #     cmd_out, expected_out = test_generic("insertion-sort-100")
+    #     self.assertEqual(cmd_out, expected_out)
 
-    def testfun10(self):
-        cmd_out, expected_out = test_generic("functions10")
-        self.assertEqual(cmd_out, expected_out)
+    # def testfun10(self):
+    #     cmd_out, expected_out = test_generic("functions10")
+    #     self.assertEqual(cmd_out, expected_out)
 
 if __name__ == '__main__':
     unittest.main(verbosity=2)

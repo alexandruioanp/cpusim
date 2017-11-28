@@ -48,6 +48,7 @@ class Computor:
                 break
 
             yield self.env.timeout(1)
+            # print(self.env.now)
 
         if self.print_stats:
             print("*************************************")
@@ -116,6 +117,7 @@ def print_data_mem():
 
 
 def main(args):
+    gv.bypassing = args.bypass
     input_filename = args.file
 
     with open(input_filename, 'r') as ass_file:
@@ -146,6 +148,8 @@ if __name__ == '__main__':
                         help='Run using simpy?')
     parser.add_argument('--stats', required=False, default=0, type=int, choices={0, 1},
                         help='Print run stats')
+    parser.add_argument('--bypass', required=False, default=1, type=int, choices={0, 1},
+                        help='Bypass results')
 
     args = parser.parse_args()
 

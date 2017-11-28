@@ -14,11 +14,11 @@ class Reservierungsstation:
         assert self.buffer_size < gv.ROB_entries
         self.shelved_instr = deque()
         self.status = "READY"
-        self.result_bus = []
+        self.result_bus = {-1: -1}
         self.instr_in_flight = []
 
         for i in range(num_eu):
-            self.execUnits.append(ExecUnit(self.env, i))
+            self.execUnits.append(ExecUnit(self.env, i, self.result_bus))
 
     def push(self, instr):
         if len(self.shelved_instr) < self.buffer_size: # can shelve more
@@ -42,13 +42,75 @@ class Reservierungsstation:
         #   d     s   N
         #   d     d   N
 
+        gv.R.lock_regs(instr.get_all_regs_touched(), instr)
+
+        for r in instr.get_all_regs_touched():
+            try:
+                # print(instr, "deletes", "R" + str(r), self.result_bus["R" + str(r)])
+                del self.result_bus["R" + str(r)]
+                # print(self.result_bus)
+            except KeyError:
+                pass
+
         all_src_regs_free = gv.R.all_available(instr.get_src_regs(), instr)
+        which_locked = gv.R.which_locked(instr.get_src_regs(), instr)
+
+        results_forwarded = True
+
+        if which_locked:
+            # print("Are locked:", which_locked, "asking", instr)
+            # print(self.result_bus)
+            for r in which_locked:
+                if "R"+str(r) not in self.result_bus.keys():
+                    results_forwarded = False
+            # print("")
+
         all_dest_regs_free = gv.R.all_available(instr.get_dest_regs(), instr)
         mem_access_in_flight = any(y.isMemAccess for y in self.instr_in_flight)
 
-        gv.R.lock_regs(instr.get_all_regs_touched(), instr)
-        instr.canDispatch = all_src_regs_free and all_dest_regs_free \
-                            and not (instr.isMemAccess and (mem_access_in_flight or mem_access_before_instr))
+        if gv.bypassing:
+            which_locked = gv.R.which_locked(instr.get_src_regs(), instr)
+            wlb = list(which_locked)
+
+            results_forwarded = True
+
+            if which_locked:
+                # print("Are locked:", which_locked, "asking", instr)
+                # print(self.result_bus)
+                for r in list(which_locked):
+                    if "R"+str(r) in self.result_bus.keys():
+                        # print(r)
+                        which_locked.remove(r)
+                # print("")
+
+            instr.canDispatch = (which_locked == []) and all_dest_regs_free \
+                                and not (instr.isMemAccess and (mem_access_in_flight or mem_access_before_instr))
+
+            canDispatch2 = all_src_regs_free and all_dest_regs_free \
+                           and not (instr.isMemAccess and (mem_access_in_flight or mem_access_before_instr))
+
+            for r in instr.get_dest_regs():
+                try:
+                    # print(instr, "deletes", "R" + str(r), self.result_bus["R" + str(r)])
+                    del self.result_bus["R" + str(r)]
+                    # print(self.result_bus)
+                except KeyError:
+                    pass
+
+            # if canDispatch2 != instr.canDispatch:
+            #     print("")
+            #     print("new", instr.canDispatch, "old", canDispatch2)
+            # # # if not all_src_regs_free and results_forwarded:
+            #     print(instr,  "asking")
+            #     print("Are locked:", which_locked)
+            #     print(self.result_bus)
+            #     # print([str(x) for x in self.instr_in_flight])
+            #     print("")
+
+        else:
+            instr.canDispatch = all_src_regs_free and all_dest_regs_free \
+                and not (instr.isMemAccess and (mem_access_in_flight or mem_access_before_instr))
+
 
     # check if instructions can go ahead, push them to available execution units
     def do(self):
@@ -66,6 +128,12 @@ class Reservierungsstation:
                     # get bypassed results
                     # potential performance enhancement
                     # gv.R.unlock_regs(instr.get_reg_nums()["src"], instr)
+
+                    if eu.bypassed:
+                        (dest, val) = eu.bypassed
+                        if dest:
+                            self.result_bus[dest] = val
+                            # print(self.env.now, self.result_bus)
                     eu.instr = None # mark as processed
 
         for eu in self.execUnits:
@@ -77,10 +145,32 @@ class Reservierungsstation:
                         #dispatch
                         self.instr_in_flight.append(instr)
                         self.shelved_instr.remove(instr)
+
+                        if gv.bypassing:
+                            instr.evaluate_operands(self.result_bus)
+                        else:
+                            instr.evaluate_operands({})
+
                         self.env.process(eu.do(instr))
+
+                        if gv.bypassing:
+                            for r in instr.get_dest_regs():
+                                try:
+                                    # print(instr, "deletes", "R" + str(r), self.result_bus["R" + str(r)])
+                                    del self.result_bus["R" + str(r)]
+                                    # print(self.result_bus)
+                                except KeyError:
+                                    pass
+                        # print(self.result_bus)
+                        for r in instr.get_dest_regs():
+                            try:
+                                # print(instr, "deletes", "R" + str(r), self.result_bus["R" + str(r)])
+                                del self.result_bus["R" + str(r)]
+                                # print(self.result_bus)
+                            except KeyError:
+                                pass
                         break
                     else:
-                        # print("Couldn't dispatch", self.shelved_instr[0])
                         pass
 
         yield self.env.timeout(1)

@@ -23,6 +23,10 @@ class WBUnit:
         self.last_instr = []
         try:
             for i in range(gv.retire_rate):
+                while gv.ROB[0].opcode == "NOP":
+                    instr = gv.ROB.popleft()
+                    instr.isRetired = True
+
                 if gv.ROB[0].isExecuted:
                     instr = gv.ROB.popleft()
                     instr.writeback()

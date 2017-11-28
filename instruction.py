@@ -102,11 +102,6 @@ class Instruction():
     def evaluate_operands(self, bypass):
         if debug:
             print("-" * 30)
-        try:
-            (reg, val) = bypass
-        except TypeError:
-            reg = val = -1
-
         if debug:
             print("Evaluating", str(self))
 
@@ -122,14 +117,15 @@ class Instruction():
                     print("using immediate value")
                 self.operand_vals.append(src)
             except ValueError:
-                if src == reg:
+                if src in bypass.keys():
                     if debug:
-                        print("WILL REPLACE REG", str(reg), "with", val)
-                    self.operand_vals.append(val)
+                        print("WILL REPLACE REG", src, "with", bypass[src])
+                    self.operand_vals.append(bypass[src])
                 else:
                     if debug:
                         print("Will get from reg")
                     self.operand_vals.append(gv.R.get(int(src[1:])))
+        # print("***", str(self), self.operand_vals)
 
     def execute(self):
         pass
