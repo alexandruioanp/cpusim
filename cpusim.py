@@ -41,10 +41,15 @@ class Computor:
                 self.env.process(gv.stages[1].do())  # D
             self.env.process(gv.stages[0].do())  # F
 
-            if gv.debug_timing:
-                print(str(self.env.now) + ": main ticking")
+            # if gv.debug_timing:
+            #     print(str(self.env.now) + ": main ticking")
 
-            if self.wbunit.last_instr and self.wbunit.last_instr[-1].opcode == "HALT":
+            # if self.wbunit.last_instr and self.wbunit.last_instr[-1].opcode == "HALT":
+            #     break
+
+            # print(self.wbunit.haltRetired)
+
+            if self.wbunit.haltRetired:
                 break
 
             yield self.env.timeout(1)
@@ -134,6 +139,8 @@ def main(args):
     if args.stats:
         pc3000.print_stats = True
 
+    gv.speculationEnabled = args.spec
+
     env.process(pc3000.run_simpy())
     env.run()
 
@@ -150,6 +157,8 @@ if __name__ == '__main__':
                         help='Print run stats')
     parser.add_argument('--bypass', required=False, default=1, type=int, choices={0, 1},
                         help='Bypass results')
+    parser.add_argument('--spec', required=False, default=1, type=int, choices={0, 1},
+                        help='Speculative execution')
 
     args = parser.parse_args()
 

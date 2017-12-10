@@ -93,7 +93,11 @@ class Instruction():
         self.isExecuted = False
         self.isRetired = False
         self.isTaken = False
+        self.predictedTaken = False
         self.canDispatch = True
+
+        self.isSpeculative = False
+        self.misspeculated = False
 
         self.srcRegNums = []
         self.destRegNums = []
@@ -193,9 +197,22 @@ class CONDBRANCHInstruction(BRANCHInstruction):
         if self.operator(self.operand_vals[0], 0):
             gv.fu.jump(self.target)
             self.isTaken = True
+            # print("branch taken")
             # gv.pipeline.pipe[Stages["DECODE"]] = getNOP() # here
         else:
-            pass
+            self.isTaken = False
+        if gv.speculationEnabled:
+            if self.isTaken != self.predictedTaken:
+                self.correctPrediction = False
+                if gv.debug_spec:
+                    print("MUST UNDO")
+                    print(self, "was", self.isTaken, "prediction", self.predictedTaken)
+                gv.fu.undoSpeculation(self)
+                # print("ROB WHEN UNDOING")
+                # print([str(x) for x in gv.ROB])
+            else:
+                self.correctPrediction = True
+                pass
 
 
 class XORInstruction(REGWRITEBACKInstruction):
@@ -222,8 +239,9 @@ class WRSInstruction(Instruction):
             self.operand_vals[0] += 1
 
     def writeback(self):
-        sys.stdout.write(self.result),
-        sys.stdout.flush()
+        if not gv.debug_timing:
+            sys.stdout.write(self.result),
+            sys.stdout.flush()
 
 
 # STORE R5,R3,0 (src -> dest + offset)
@@ -292,8 +310,9 @@ class WRInstruction(Instruction):
         self.result = str(self.operand_vals[0])
 
     def writeback(self):
-        sys.stdout.write(self.result)
-        sys.stdout.flush()
+        if not gv.debug_timing:
+            sys.stdout.write(self.result)
+            sys.stdout.flush()
 
 # SUBI R6,R1,0 (dest = src - imm) /// SUB R5,R2,R0 (dest = src1 - src2)
 class SUBInstruction(REGWRITEBACKInstruction):

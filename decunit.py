@@ -1,19 +1,19 @@
-import gv
 import simpy
+from collections import deque
+
+import gv
 from pipeline import *
 import instruction
-from collections import deque
+from brpredictor import *
 
 class DecUnit:
     def __init__(self, env):
         self.env = env
         self.last_bundle = None
         self.status = "READY"
+        self.brpred = BrPredictor()
 
     def do(self):
-        if gv.debug_timing:
-            print(str(self.env.now) + ": Issued (Decode)", str(self.instr_bundle))
-
         self.instr_bundle = gv.pipeline.pipe[Stages["DECODE"]]
 
         if not self.instr_bundle:
@@ -31,6 +31,9 @@ class DecUnit:
                 else:
                     self.last_bundle.append(instr)
 
+        if gv.debug_timing:
+            print("ID@", str(self.env.now) + ":", [str(x) for x in self.instr_bundle])
+
         self.status = "BUSY"
 
         self.instr_bundle = self.last_bundle
@@ -46,18 +49,39 @@ class DecUnit:
             else:
                 self.last_bundle.popleft()
                 gv.ROB.append(instr)
+
+                # print([str(x) for x in gv.ROB])
                 gv.R.lock_regs(instr.get_all_regs_touched(), instr)
 
                 if instr and instr.isCondBranch:
-                    while not instr.isExecuted:
-                        yield self.env.timeout(1)
-                    if instr.isTaken: # flush bundle
-                        self.last_bundle = [self.getDecodedNOP()]
-                        # gv.pipeline.pipe[Stages["DECODE"]] = [instruction.getNOP()]
-                        break
+                    if gv.speculationEnabled:
+                        # print("Will speculate", instr)
+                        # if gv.speculating:
+                        #     print("blocking")
+                        #     self.wait_for_instr(instr)
+
+                        predTaken = self.brpred.taken(instr)
+                        # print(instr, "will be predicted as", predTaken)
+                        instr.predictedTaken = predTaken
+                        gv.speculating = True
+                        # instr.isSpeculative = True
+                        if predTaken:
+                            gv.fu.jump(instr.target, speculative=True)
+                    else:
+                        # print("waiting")
+                        self.wait_for_instr(instr)
 
 
         self.status = "READY"
+
+    def wait_for_instr(self, instr):
+        while not instr.isExecuted:
+            # print("still waiting")
+            yield self.env.timeout(1)
+            if instr.isTaken:  # flush bundle
+                self.last_bundle = []
+                # gv.pipeline.pipe[Stages["DECODE"]] = [instruction.getNOP()]
+                break
 
     def getDecodedNOP(self):
         nop = instruction.getNOP()

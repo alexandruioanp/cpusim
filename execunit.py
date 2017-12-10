@@ -19,13 +19,14 @@ class ExecUnit:
             self.instr = instr
 
             if gv.debug_timing:
-                print("E" + str(self.id), self.env.now)
+                print("ES@", self.env.now, str(instr))
+
             instr.execute()
 
             yield self.env.timeout(instr.duration - 0.1)
 
             if gv.debug_timing:
-                print(str(self.env.now) + ": Executed", str(instr))
+                print("EF@", self.env.now, str(instr))
 
             self.bypassed = None
 
