@@ -17,23 +17,35 @@ class FetchUnit:
             raise Exception("Jumped to illegal address " + str(target))
 
         if speculative:
-            self.savedPCs.append(self.pc)
+            gv.speculation_level += 1
+            if gv.debug_spec:
+                print("JUMPING SPECULATIVELY to", target, "FROM", self.pc, "gv.spec", gv.speculating)
+                print("instruction after return:", self.instruction_stream[self.pc])
             # print("will continue from", self.pc, "which is", self.instruction_stream[self.pc])
             # print(self.savedPCs)
 
         self.pc = target
-        gv.pipeline.pipe[Stages["FETCH"]] = [getNOP()]
+        gv.pipeline.pipe[Stages["FETCH"]] = []
 
     def undoSpeculation(self, instr):
-        print("UNDOINGGGGGGGGGGGGG", self.savedPCs)
-        self.pc = self.savedPCs[0]
-        self.savedPCs = self.savedPCs[1:]
-        print("AFTERRR", self.savedPCs)
-        print("gv.speculating", gv.speculating)
-        if not self.savedPCs:
-            print("DONE SPECULATING, jumping to", self.pc)
+        if gv.debug_spec:
+            print("UNDOINGGGGGGGGGGGGG", instr, instr.pc + 1)
+        self.pc = instr.pc + 1
+        # self.pc = self.savedPCs[0]
+        gv.speculation_level -= 1
+        if gv.debug_spec:
+            print("next to fetch:", self.instruction_stream[self.pc:self.pc+3])
+            if gv.pipeline.pipe[Stages["FETCH"]]:
+                print("in pipeline", [x.asm for x in gv.pipeline.pipe[Stages["FETCH"]]])
 
+        if not gv.branches:
+            if gv.debug_spec:
+                print("DONE SPECULATING, jumping to", self.pc)
             gv.speculating = False
+
+        if gv.debug_spec:
+            print("gv.speculating", gv.speculating)
+        gv.pipeline.pipe[Stages["FETCH"]] = []
 
     def do(self):
         self.fetch(gv.issue_rate)
@@ -41,6 +53,7 @@ class FetchUnit:
 
     def fetch(self, num):
         instr = self.instruction_stream[self.pc:self.pc + num]
+        instrpc = self.pc
 
         if gv.debug_timing:
             print("Fe@", str(self.env.now) + ": ", end='')
@@ -51,10 +64,12 @@ class FetchUnit:
                 instr_obj = get_instruction(i)
                 instr_obj.isSpeculative = gv.speculating
                 instr2.append(instr_obj)
-                print(i, "speculating", gv.speculating, "isspec", instr2[-1].isSpeculative)
-
-            if gv.debug_timing:
-                print(instr2, ' ', end='')
+                instr_obj.pc = instrpc
+                # if gv.debug_spec:
+                    # print(i, "speculating", gv.speculating, "isspec", instr2[-1].isSpeculative)
+                if gv.debug_timing:
+                    print(i, ' ', end='')
+                instrpc += 1
 
             st = gv.pipeline.push(instr2)
 

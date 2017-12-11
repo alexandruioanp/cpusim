@@ -15,6 +15,8 @@ def get_instruction(line):
         print("Unrecognised instruction", line)
         i = ""
 
+    i.asm = line
+
     return i
 
 def getNOP():
@@ -98,6 +100,7 @@ class Instruction():
 
         self.isSpeculative = False
         self.misspeculated = False
+        self.executedSpeculatively = False
 
         self.srcRegNums = []
         self.destRegNums = []
@@ -195,12 +198,17 @@ class CONDBRANCHInstruction(BRANCHInstruction):
 
     def execute(self):
         if self.operator(self.operand_vals[0], 0):
-            gv.fu.jump(self.target)
+            if not self.executedSpeculatively : # branch has already executed speculatively
+                gv.fu.jump(self.target)
+            else:
+                if gv.debug_spec:
+                    print("won't branch again", self)
             self.isTaken = True
             # print("branch taken")
             # gv.pipeline.pipe[Stages["DECODE"]] = getNOP() # here
         else:
             self.isTaken = False
+
         if gv.speculationEnabled:
             if self.isTaken != self.predictedTaken:
                 self.correctPrediction = False

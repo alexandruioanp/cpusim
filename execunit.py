@@ -15,18 +15,21 @@ class ExecUnit:
         self.status = "BUSY"
         self.bypassed = None
 
-        if instr:
+        if instr.misspeculated:
+            print("TRYING TO EXECUTE MISSPECULATED ISNTR")
+
+        if instr and not instr.misspeculated:
             self.instr = instr
 
             if gv.debug_timing:
-                print("ES@", self.env.now, str(instr))
+                print("ES@", self.env.now, instr.asm)
 
             instr.execute()
 
             yield self.env.timeout(instr.duration - 0.1)
 
             if gv.debug_timing:
-                print("EF@", self.env.now, str(instr))
+                print("EF@", self.env.now, instr.asm)
 
             self.bypassed = None
 

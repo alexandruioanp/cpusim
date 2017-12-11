@@ -41,7 +41,8 @@ class Computor:
                 self.env.process(gv.stages[1].do())  # D
             self.env.process(gv.stages[0].do())  # F
 
-            # if gv.debug_timing:
+            if gv.debug_timing:
+                print("")
             #     print(str(self.env.now) + ": main ticking")
 
             # if self.wbunit.last_instr and self.wbunit.last_instr[-1].opcode == "HALT":
@@ -131,6 +132,11 @@ def main(args):
     program = []
     clean_asm = []
     assemble(asm, program, clean_asm)
+
+    with open("tt.asm", 'w') as outf:
+        for line in clean_asm:
+            outf.write(line)
+            outf.write('\n')
 
     env = simpy.Environment()
     gv.pipeline = Pipeline(env)

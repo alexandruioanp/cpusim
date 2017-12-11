@@ -116,12 +116,15 @@ class Reservierungsstation:
     def do(self):
         # process instructions that have just completed
         # read bypassed data on bus, unlock dest regs
+        # print("in flight (ret, mis, exec):", [(x.asm, x.isRetired, x.misspeculated, x.isExecuted) for x in self.instr_in_flight])
         for instr in list(self.instr_in_flight):
-            if instr.isRetired:
+            if instr.isRetired or instr.misspeculated:
                 self.instr_in_flight.remove(instr)
                 # potential performance enhancement
                 # gv.R.unlock_regs(instr.get_reg_nums()["dest"], instr)
                 gv.R.unlock_regs(instr.get_all_regs_touched(), instr)
+            if  instr.misspeculated and gv.debug_spec:
+                print("Misspeculated instr in flight", instr.asm)
 
         for eu in self.execUnits:
                 if eu.status == "READY" and eu.instr: # finished and not processed
@@ -140,6 +143,13 @@ class Reservierungsstation:
             if eu.status == "READY":
                 # check if any instr can go ahead, lock dest regs, dispatch it
                 for instr in list(self.shelved_instr):
+                    if instr.misspeculated:
+                        if gv.debug_spec:
+                            print("misspeculated instr on shelf", instr.asm)
+                        self.shelved_instr.remove(instr)
+                        gv.R.unlock_regs(instr.get_all_regs_touched(), instr)
+                        continue
+
                     self.dispatch_check(instr)
                     if instr.canDispatch:
                         #dispatch
