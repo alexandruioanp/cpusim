@@ -131,7 +131,6 @@ class Reservierungsstation:
                     # get bypassed results
                     # potential performance enhancement
                     # gv.R.unlock_regs(instr.get_reg_nums()["src"], instr)
-
                     if eu.bypassed:
                         (dest, val) = eu.bypassed
                         if dest:

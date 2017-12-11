@@ -65,6 +65,8 @@ class DecUnit:
                                 print("BLOCKING ON SECOND BRANCH", instr)
                             while not (instr.isExecuted or instr.isRetired):
                                 yield self.env.timeout(1)
+                                if gv.debug_spec:
+                                    print("still waiting on", instr, instr.isExecuted, instr.isRetired)
                             if instr.isTaken:  # flush bundle
                                 self.last_bundle = []
                                 break

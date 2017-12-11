@@ -25,40 +25,61 @@ class WBUnit:
             print("(ex, sp)", [(x.asm, x.isExecuted, x.isSpeculative) for x in gv.ROB])
         try:
             for i in range(gv.retire_rate):
-                if gv.ROB and gv.ROB[0].isExecuted:
-                    instr = gv.ROB[0]
+                if gv.speculationEnabled:
+                    if gv.ROB and gv.ROB[0].isExecuted:
+                        instr = gv.ROB[0]
+                        instr.isRetired = True
 
-                    instr = gv.ROB.popleft()
-                    instr.writeback()
+                        if not instr.isSpeculative:
+                            in23 = gv.ROB.popleft()
+                            instr.writeback()
+                            # print(instr)
+                            # print("Written bakc", instr)
 
-                    if gv.debug_timing:
-                        print(instr.asm + ", ", end='')
-                    instr.isRetired = True
+                            gv.retired += 1
+                            if instr.opcode == "HALT":
+                                self.haltRetired = True
+                                return
 
-                    if instr.isBranch and gv.speculationEnabled:
-                        if gv.debug_spec:
-                            print("Resolving speculation because of", instr)
+                        if gv.debug_timing:
+                            print(instr.asm + ", ", end='')
 
-                        self.resolveSpeculation(instr)
-
-                        while gv.ROB and gv.ROB[0].misspeculated:
-                            instr3 = gv.ROB.popleft()
-                            instr3.isRetired = True
+                        if instr.isBranch:
+                            # in22 = gv.ROB.popleft()
+                            # print('instr', instr, 'in23', in23)
+                            # print(in22.asm, "should be a branch")
                             if gv.debug_spec:
-                                print("flushing, (ex, spec)")
-                                print([(x.asm, x.isExecuted, x.isSpeculative) for x in gv.ROB])
+                                print("Resolving speculation because of", instr, instr.isSpeculative, instr.isExecuted)
 
-                        gv.speculating = False
+                            self.resolveSpeculation(instr)
 
-                        if gv.debug_spec:
-                            print("Resolved speculation @ WB. Spec?", gv.speculating)
+                            while gv.ROB and gv.ROB[0].misspeculated:
+                                instr3 = gv.ROB.popleft()
+                                instr3.isRetired = True
+                                if gv.debug_spec:
+                                    print("flushing, (ex, spec)")
+                                    print([(x.asm, x.isExecuted, x.isSpeculative) for x in gv.ROB])
 
-                    gv.retired += 1
-                    if instr.opcode == "HALT":
-                        self.haltRetired = True
-                        return
+                            gv.speculating = False
+
+                            if gv.debug_spec:
+                                print("Resolved speculation @ WB. Spec?", gv.speculating)
+                    else:
+                        break
                 else:
-                    break
+                    if gv.ROB and gv.ROB[0].isExecuted:
+                        instr = gv.ROB.popleft()
+                        print(instr)
+                        if gv.debug_timing:
+                            print(instr.asm + ", ", end='')
+                        instr.writeback()
+                        instr.isRetired = True
+                        gv.retired += 1
+                        if instr.opcode == "HALT":
+                            self.haltRetired = True
+                            return
+                    else:
+                        break
         except IndexError:
             print("WHOPOP")
             pass # ROB empty
@@ -77,19 +98,23 @@ class WBUnit:
         else:
             instr.correctPrediction = True
 
+        hit_branch = False
+
         if instr.correctPrediction: # prediction correct
             if gv.debug_spec:
                 print("CORRECT")
             for instr2 in gv.ROB:
                 if instr2.isBranch:
+                    hit_branch = True
                     if gv.debug_spec:
                         print("HIT BRANCH", instr2)
-                    break
+                    # break
                 if instr2.isSpeculative:
                     instr2.isSpeculative = False
                     if gv.debug_spec:
                         print(instr2, "not speculative anymore")
-
+                if hit_branch:
+                    break
         else: # prediction wrong
             for instr2 in gv.ROB:
                 if instr2.isSpeculative:
