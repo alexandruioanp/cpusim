@@ -41,6 +41,8 @@ class ExecUnit:
                 pass
 
             instr.isExecuted = True
-            gv.instr_exec += 1
+
+            if not instr.misspeculated:
+                gv.instr_exec += 1
 
         self.status = "READY"

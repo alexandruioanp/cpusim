@@ -7,14 +7,13 @@ instr_exec = 0
 issue_rate = 2
 ROB = None
 ROB_entries = 20
-# retire_rate = issue_rate + 2
+retired = 0
 retire_rate = issue_rate
 bypassing = False
 speculating = False
 speculationEnabled = True
 block_on_nested_speculation = True
-branches = []
-speculation_level = 0
 
-debug_spec = True
-debug_timing = True
+debug_spec = False
+debug_timing = False
+

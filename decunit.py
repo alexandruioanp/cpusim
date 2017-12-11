@@ -24,18 +24,17 @@ class DecUnit:
             for idx, instr in enumerate(self.instr_bundle):
                 instr.decode()
 
-                if instr.isUncondBranch:
-                    gv.fu.jump(instr.target) # if not speculative??
-                    if gv.debug_timing:
-                        print("@ID jumped", instr)
-                    # self.last_bundle += ([self.getDecodedNOP()] * (len(self.instr_bundle) - idx))
-                    # self.last_bundle = []
-                    break
+                if not gv.speculationEnabled:
+                    if instr.isUncondBranch:
+                        gv.fu.jump(instr)
+                        break
+                    else:
+                        self.last_bundle.append(instr)
                 else:
                     self.last_bundle.append(instr)
 
-        if gv.debug_timing:
-            print("ID@", str(self.env.now) + ":", [x.asm for x in self.instr_bundle])
+        # if gv.debug_timing:
+        #     print("ID@", str(self.env.now) + ":", [x.asm for x in self.instr_bundle])
 
         self.status = "BUSY"
 
@@ -44,75 +43,54 @@ class DecUnit:
 
         # TODO: check if there is space in ROB; stall otherwise
         while self.last_bundle:
+            if gv.debug_timing:
+                print("ID@", str(self.env.now) + ":", [x.asm for x in self.instr_bundle])
             instr = self.last_bundle[0] # peek
-            st = gv.stages[Stages["RS"]].push(instr)
-            if st:
-                # print("RS full, cannot push")
+            rs_full = gv.stages[Stages["RS"]].push(instr)
+            if rs_full:
                 yield self.env.timeout(1)
             else:
                 self.last_bundle.popleft()
                 gv.ROB.append(instr)
 
-                # while instr.opcode == "HALT" and not instr.isSpeculative:
-                #     # print("COULD STOP")
-                #     yield self.env.timeout(1)
-
-                # print([str(x) for x in gv.ROB])
                 gv.R.lock_regs(instr.get_all_regs_touched(), instr)
 
                 if gv.speculationEnabled:
                     instr.isSpeculative = gv.speculating
 
-                if instr and instr.isCondBranch:
+                if instr and instr.isBranch:
                     if gv.speculationEnabled:
-                        gv.branches.append(instr)
                         if gv.block_on_nested_speculation and gv.speculating:
                             if gv.debug_spec:
                                 print("BLOCKING ON SECOND BRANCH", instr)
                             while not (instr.isExecuted or instr.isRetired):
                                 yield self.env.timeout(1)
-                                if gv.debug_spec:
-                                    print("WAITING on", instr, instr.isRetired, )
                             if instr.isTaken:  # flush bundle
-                                self.last_bundle = [self.getDecodedNOP()]
-                                # gv.pipeline.pipe[Stages["DECODE"]] = [instruction.getNOP()]
+                                self.last_bundle = []
                                 break
                         else:
-                            # print("Will speculate", instr)
-                            # if gv.speculating:
-                            #     print("blocking")
-                            #     self.wait_for_instr(instr)
-
                             predTaken = self.brpred.taken(instr)
-                            # print(instr, "will be predicted as", predTaken)
                             instr.predictedTaken = predTaken
-                            instr.executedSpeculatively = True
                             gv.speculating = True
+                            instr.executedSpeculatively = True
                             if gv.debug_spec:
                                 print("AM SPECUL:ATING NOW", instr)
-                            # instr.isSpeculative = True
                             if predTaken:
-                                gv.fu.jump(instr.target, speculative=True)
+                                gv.fu.jump(instr, speculative=True)
+                                if gv.debug_spec:
+                                    print("last bundle", [x.asm for x in self.last_bundle])
+                                break
+                                # self.last_bundle = [] # ?
                     else:
                         while not instr.isExecuted:
                             yield self.env.timeout(1)
                         if instr.isTaken:  # flush bundle
-                            self.last_bundle = [self.getDecodedNOP()]
-                            # gv.pipeline.pipe[Stages["DECODE"]] = [instruction.getNOP()]
+                            self.last_bundle = []
                             break
 
         self.status = "READY"
 
-    def wait_for_instr(self, instr):
-        while not instr.isExecuted:
-            print("still waiting")
-            yield self.env.timeout(1)
-            if instr.isTaken:  # flush bundle
-                self.last_bundle = []
-                gv.pipeline.pipe[Stages["DECODE"]] = []
-                break
+    def flush(self):
+        self.last_bundle = []
+        gv.pipeline.pipe[Stages["DECODE"]] = []
 
-    def getDecodedNOP(self):
-        nop = instruction.getNOP()
-        nop.decode()
-        return nop

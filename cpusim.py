@@ -85,6 +85,8 @@ def assemble(asm, program, clean):
             gv.data_mem.append(int(re.search("\d+", line).group()))
             addr += 1
 
+    pc = 0
+
     for i in range(len(asm)):
         line = asm[i].strip()
 
@@ -104,7 +106,8 @@ def assemble(asm, program, clean):
         if 'DATA' not in line and ":" not in line:
             instr = get_instruction(line)
             program.append(instr)
-            clean.append(line)
+            clean.append((line, pc))
+            pc += 1
 
 
 def print_data_mem():
@@ -133,10 +136,10 @@ def main(args):
     clean_asm = []
     assemble(asm, program, clean_asm)
 
-    with open("tt.asm", 'w') as outf:
-        for line in clean_asm:
-            outf.write(line)
-            outf.write('\n')
+    # with open("tt.asm", 'w') as outf:
+    #     for line in clean_asm:
+    #         outf.write(str(line[1]) + '. ' + line[0])
+    #         outf.write('\n')
 
     env = simpy.Environment()
     gv.pipeline = Pipeline(env)
@@ -149,6 +152,10 @@ def main(args):
 
     env.process(pc3000.run_simpy())
     env.run()
+
+    # for i in clean_asm:
+    #     if i:
+    #         print(str(i[1]) + '.', i[0])
 
     # if debug:
         # print_data_mem()

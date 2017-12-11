@@ -43,9 +43,9 @@ class TestSim(unittest.TestCase):
         cmd_out, expected_out = test_generic("test6")
         self.assertEqual(cmd_out, expected_out)
 
-    def test7(self):
-        cmd_out, expected_out = test_generic("test7")
-        self.assertEqual(cmd_out, expected_out)
+    # def test7(self):
+    #     cmd_out, expected_out = test_generic("test7")
+    #     self.assertEqual(cmd_out, expected_out)
 
     def testsk(self):
         cmd_out, expected_out = test_generic("testsk")

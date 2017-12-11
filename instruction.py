@@ -166,17 +166,23 @@ class JMPInstruction(BRANCHInstruction):
         self.set_all_regs_touched()
 
     def execute(self):
-        print("PROBLEM? EXECUTED JMP")
+        # print("PROBLEM? EXECUTED JMP")
+        gv.fu.jump(self)
+        self.correctPrediction = True
+        self.isTaken = True
 
 
 class JUMPInstruction(BRANCHInstruction):
     def decode(self):
         super(JUMPInstruction, self).decode()
         self.src = [self.operands[0]]
+        self.target = self.operand_vals[0]
         self.set_all_regs_touched()
 
     def execute(self):
-        gv.fu.jump(self.operand_vals[0])
+        gv.fu.jump(self)
+        self.correctPrediction = True
+        self.isTaken = True
 
 
 class CONDBRANCHInstruction(BRANCHInstruction):
@@ -199,28 +205,13 @@ class CONDBRANCHInstruction(BRANCHInstruction):
     def execute(self):
         if self.operator(self.operand_vals[0], 0):
             if not self.executedSpeculatively : # branch has already executed speculatively
-                gv.fu.jump(self.target)
+                gv.fu.jump(self)
             else:
                 if gv.debug_spec:
                     print("won't branch again", self)
             self.isTaken = True
-            # print("branch taken")
-            # gv.pipeline.pipe[Stages["DECODE"]] = getNOP() # here
         else:
             self.isTaken = False
-
-        if gv.speculationEnabled:
-            if self.isTaken != self.predictedTaken:
-                self.correctPrediction = False
-                if gv.debug_spec:
-                    print("MUST UNDO")
-                    print(self, "was", self.isTaken, "prediction", self.predictedTaken)
-                gv.fu.undoSpeculation(self)
-                # print("ROB WHEN UNDOING")
-                # print([str(x) for x in gv.ROB])
-            else:
-                self.correctPrediction = True
-                pass
 
 
 class XORInstruction(REGWRITEBACKInstruction):
