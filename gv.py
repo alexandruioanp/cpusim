@@ -14,6 +14,6 @@ speculating = False
 speculationEnabled = True
 block_on_nested_speculation = True
 
-debug_spec = True
-debug_timing = True
+debug_spec = False
+debug_timing = False
 

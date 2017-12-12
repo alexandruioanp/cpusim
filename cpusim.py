@@ -57,11 +57,15 @@ class Computor:
             # print(self.env.now)
 
         if self.print_stats:
+            print("")
             print("*************************************")
             print("Cycles taken:", self.env.now)
             print("Instructions executed:", gv.instr_exec)
             print("Instructions retired:", gv.retired)
-            print("IPC:", gv.instr_exec / self.env.now)
+            print("IPC:", gv.retired / self.env.now)
+            print("*************************************")
+            print("Branches:", gv.num_branches)
+            print("Mispredictions:", gv.mispred)
 
 
 def assemble(asm, program, clean):

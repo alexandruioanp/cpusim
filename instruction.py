@@ -167,7 +167,11 @@ class JMPInstruction(BRANCHInstruction):
 
     def execute(self):
         # print("PROBLEM? EXECUTED JMP")
-        gv.fu.jump(self)
+        if not self.executedSpeculatively:  # branch has already executed speculatively
+            gv.fu.jump(self)
+        else:
+            if gv.debug_spec:
+                print("won't branch again", self)
         self.correctPrediction = True
         self.isTaken = True
 
@@ -180,7 +184,11 @@ class JUMPInstruction(BRANCHInstruction):
         self.set_all_regs_touched()
 
     def execute(self):
-        gv.fu.jump(self)
+        if not self.executedSpeculatively:  # branch has already executed speculatively
+            gv.fu.jump(self)
+        else:
+            if gv.debug_spec:
+                print("won't branch again", self)
         self.correctPrediction = True
         self.isTaken = True
 

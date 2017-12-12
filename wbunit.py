@@ -31,12 +31,13 @@ class WBUnit:
                         instr.isRetired = True
 
                         if not instr.isSpeculative:
-                            in23 = gv.ROB.popleft()
+                            gv.ROB.popleft()
                             instr.writeback()
-                            # print(instr)
                             # print("Written bakc", instr)
+                            if not instr.opcode == "JMP": # CHEAT
+                                gv.retired += 1
+                                # print(instr)
 
-                            gv.retired += 1
                             if instr.opcode == "HALT":
                                 self.haltRetired = True
                                 return
@@ -69,7 +70,7 @@ class WBUnit:
                 else:
                     if gv.ROB and gv.ROB[0].isExecuted:
                         instr = gv.ROB.popleft()
-                        print(instr)
+                        # print(instr)
                         if gv.debug_timing:
                             print(instr.asm + ", ", end='')
                         instr.writeback()
