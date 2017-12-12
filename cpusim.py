@@ -43,12 +43,6 @@ class Computor:
 
             if gv.debug_timing:
                 print("")
-            #     print(str(self.env.now) + ": main ticking")
-
-            # if self.wbunit.last_instr and self.wbunit.last_instr[-1].opcode == "HALT":
-            #     break
-
-            # print(self.wbunit.haltRetired)
 
             if self.wbunit.haltRetired:
                 break
@@ -64,8 +58,9 @@ class Computor:
             print("Instructions retired:", gv.retired)
             print("IPC:", gv.retired / self.env.now)
             print("*************************************")
-            print("Branches:", gv.num_branches)
-            print("Mispredictions:", gv.mispred)
+            print("Conditional branches:", gv.cond_br, "Total branches:", gv.num_branches)
+            if gv.speculationEnabled:
+                print("Mispredictions:      ", gv.mispred, '|', "%.2f%%" % (100*gv.mispred/gv.cond_br))
 
 
 def assemble(asm, program, clean):
@@ -140,10 +135,10 @@ def main(args):
     clean_asm = []
     assemble(asm, program, clean_asm)
 
-    # with open("tt.asm", 'w') as outf:
-    #     for line in clean_asm:
-    #         outf.write(str(line[1]) + '. ' + line[0])
-    #         outf.write('\n')
+    with open("t6.asm", 'w') as outf:
+        for line in clean_asm:
+            outf.write(str(line[1]) + '. ' + line[0])
+            outf.write('\n')
 
     env = simpy.Environment()
     gv.pipeline = Pipeline(env)

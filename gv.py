@@ -17,3 +17,8 @@ block_on_nested_speculation = True
 debug_spec = False
 debug_timing = False
 
+num_branches = 0
+mispred = 0
+cond_br = 0
+
+print_trace = False

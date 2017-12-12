@@ -36,7 +36,8 @@ class WBUnit:
                             # print("Written bakc", instr)
                             if not instr.opcode == "JMP": # CHEAT
                                 gv.retired += 1
-                                # print(instr)
+                                if gv.print_trace:
+                                    print(instr)
 
                             if instr.opcode == "HALT":
                                 self.haltRetired = True
@@ -46,9 +47,11 @@ class WBUnit:
                             print(instr.asm + ", ", end='')
 
                         if instr.isBranch:
-                            # in22 = gv.ROB.popleft()
-                            # print('instr', instr, 'in23', in23)
-                            # print(in22.asm, "should be a branch")
+                            gv.num_branches += 1
+
+                            if instr.isCondBranch:
+                                gv.cond_br += 1
+
                             if gv.debug_spec:
                                 print("Resolving speculation because of", instr, instr.isSpeculative, instr.isExecuted)
 
@@ -70,7 +73,8 @@ class WBUnit:
                 else:
                     if gv.ROB and gv.ROB[0].isExecuted:
                         instr = gv.ROB.popleft()
-                        # print(instr)
+                        if gv.print_trace:
+                            print(instr)
                         if gv.debug_timing:
                             print(instr.asm + ", ", end='')
                         instr.writeback()
@@ -96,6 +100,7 @@ class WBUnit:
                 print(instr, "was", instr.isTaken, "prediction", instr.predictedTaken)
             gv.fu.undoSpeculation(instr)
             gv.stages[Stages["DECODE"]].flush()
+            gv.mispred += 1
         else:
             instr.correctPrediction = True
 
@@ -114,8 +119,8 @@ class WBUnit:
                     instr2.isSpeculative = False
                     if gv.debug_spec:
                         print(instr2, "not speculative anymore")
-                if hit_branch:
-                    break
+                # if hit_branch:
+                #     break
         else: # prediction wrong
             for instr2 in gv.ROB:
                 if instr2.isSpeculative:
