@@ -119,13 +119,12 @@ class WBUnit:
                     instr2.isSpeculative = False
                     if gv.debug_spec:
                         print(instr2, "not speculative anymore")
-                # if hit_branch:
-                #     break
+                if hit_branch:
+                    break
         else: # prediction wrong
             for instr2 in gv.ROB:
                 if instr2.isSpeculative:
                     instr2.misspeculated = True
-                    # instr2.isExecuted = True
                     if gv.debug_spec:
                         print(instr2, "misspeculated")
 

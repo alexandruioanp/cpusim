@@ -10,7 +10,6 @@ class FetchUnit:
         self.pc = 0
         self.instruction_stream = istream
         self.status = "READY"
-        self.savedPCs = []
 
     def jump(self, instr, speculative=False):
         target = instr.target
@@ -54,12 +53,8 @@ class FetchUnit:
                 instr_obj.pc = i[1]
                 instr_obj.isSpeculative = gv.speculating
                 instr2.append(instr_obj)
-                # instr_obj.pc = instrpc
-                # if gv.debug_spec:
-                    # print(i, "speculating", gv.speculating, "isspec", instr2[-1].isSpeculative)
                 if gv.debug_timing:
                     print(i, ' ', end='')
-                # instrpc += 1
 
             st = gv.pipeline.push(instr2)
 

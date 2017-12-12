@@ -48,14 +48,14 @@ class DecUnit:
                 print("ID@", str(self.env.now) + ":", [x.asm for x in self.instr_bundle])
             instr = self.last_bundle[0] # peek
             rs_full = gv.stages[Stages["RS"]].push(instr)
-            if gv.debug_timing:
-                print("ID pushed", instr, "to RS");
+            # if gv.debug_timing:
+                # print("ID pushed", instr, "to RS");
             if rs_full:
                 yield self.env.timeout(1)
             else:
                 ii = self.last_bundle.popleft()
-                if gv.debug_timing:
-                    print("ID popped", ii)
+                # if gv.debug_timing:
+                #     print("ID popped", ii)
                 gv.ROB.append(instr)
 
                 gv.R.lock_regs(instr.get_all_regs_touched(), instr)
@@ -91,6 +91,8 @@ class DecUnit:
                             if gv.debug_spec:
                                 print("AM SPECUL:ATING NOW", instr)
                             if predTaken:
+                                if gv.debug_spec:
+                                    print("ID: WILL JUMP")
                                 gv.fu.jump(instr, speculative=True)
                                 if gv.debug_spec:
                                     print("last bundle", [x.asm for x in self.last_bundle])
