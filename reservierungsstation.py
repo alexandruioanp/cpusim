@@ -44,13 +44,16 @@ class Reservierungsstation:
 
         gv.R.lock_regs(instr.get_all_regs_touched(), instr)
 
-        for r in instr.get_all_regs_touched():
-            try:
-                # print(instr, "deletes", "R" + str(r), self.result_bus["R" + str(r)])
-                del self.result_bus["R" + str(r)]
-                # print(self.result_bus)
-            except KeyError:
-                pass
+        if gv.bypassing:
+            print("BYPASSSING")
+            for r in instr.get_all_regs_touched():
+                try:
+                    print(instr, "deletes", "R" + str(r), self.result_bus["R" + str(r)])
+                    del self.result_bus["R" + str(r)]
+                    # print(self.result_bus)
+                except KeyError:
+                    print("key error")
+                    pass
 
         all_src_regs_free = gv.R.all_available(instr.get_src_regs(), instr)
         which_locked = gv.R.which_locked(instr.get_src_regs(), instr)
@@ -96,46 +99,42 @@ class Reservierungsstation:
                     # print(self.result_bus)
                 except KeyError:
                     pass
-
-            # if canDispatch2 != instr.canDispatch:
-            #     print("")
-            #     print("new", instr.canDispatch, "old", canDispatch2)
-            # # # if not all_src_regs_free and results_forwarded:
-            #     print(instr,  "asking")
-            #     print("Are locked:", which_locked)
-            #     print(self.result_bus)
-            #     # print([str(x) for x in self.instr_in_flight])
-            #     print("")
-
         else:
             instr.canDispatch = all_src_regs_free and all_dest_regs_free \
                 and not (instr.isMemAccess and (mem_access_in_flight or mem_access_before_instr))
+
+            if self.env.now > 1450 and instr.asm == "ADDI R2,R0,16":
+                if not all_dest_regs_free:
+                    print("NOT ALL DEST REGS FREE")
+                    print(str(instr))
+                    for r in instr.get_dest_regs():
+                        if not gv.R.is_available(r, instr):
+                            print(r, "locked by", gv.R.who_locked(r))
 
 
     # check if instructions can go ahead, push them to available execution units
     def do(self):
         # process instructions that have just completed
-        # read bypassed data on bus, unlock dest regs
+        # read bypassed data on bus, regs
         # print("in flight (ret, mis, exec):", [(x.asm, x.isRetired, x.misspeculated, x.isExecuted) for x in self.instr_in_flight])
         for instr in list(self.instr_in_flight):
             if instr.isRetired or instr.misspeculated:
                 self.instr_in_flight.remove(instr)
-                # potential performance enhancement
-                # gv.R.unlock_regs(instr.get_reg_nums()["dest"], instr)
                 gv.R.unlock_regs(instr.get_all_regs_touched(), instr)
             if  instr.misspeculated and gv.debug_spec:
                 print("Misspeculated instr in flight", instr.asm)
 
+        for instr in self.shelved_instr:
+            gv.R.lock_regs(instr.get_all_regs_touched(), instr)
+
         for eu in self.execUnits:
                 if eu.status == "READY" and eu.instr: # finished and not processed
-                    # get bypassed results
-                    # potential performance enhancement
-                    # gv.R.unlock_regs(instr.get_reg_nums()["src"], instr)
-                    if eu.bypassed:
-                        (dest, val) = eu.bypassed
-                        if dest:
-                            self.result_bus[dest] = val
-                            # print(self.env.now, self.result_bus)
+                    if gv.bypassing:
+                        # get bypassed results
+                        if eu.bypassed:
+                            (dest, val) = eu.bypassed
+                            if dest:
+                                self.result_bus[dest] = val
                     eu.instr = None # mark as processed
 
         for eu in self.execUnits:
@@ -165,19 +164,10 @@ class Reservierungsstation:
                         if gv.bypassing:
                             for r in instr.get_dest_regs():
                                 try:
-                                    # print(instr, "deletes", "R" + str(r), self.result_bus["R" + str(r)])
                                     del self.result_bus["R" + str(r)]
-                                    # print(self.result_bus)
                                 except KeyError:
                                     pass
-                        # print(self.result_bus)
-                        for r in instr.get_dest_regs():
-                            try:
-                                # print(instr, "deletes", "R" + str(r), self.result_bus["R" + str(r)])
-                                del self.result_bus["R" + str(r)]
-                                # print(self.result_bus)
-                            except KeyError:
-                                pass
+
                         break
                     else:
                         pass

@@ -21,6 +21,8 @@ class WBUnit:
         yield self.env.timeout(1)
 
     def writeback(self):
+        didRetire = False
+
         if gv.ROB and gv.debug_timing:
             print("(ex, sp)", [(x.asm, x.isExecuted, x.isSpeculative) for x in gv.ROB])
         try:
@@ -33,6 +35,7 @@ class WBUnit:
                         if not instr.isSpeculative:
                             gv.ROB.popleft()
                             instr.writeback()
+                            didRetire = True
                             # print("Written bakc", instr)
                             if not instr.opcode == "JMP": # CHEAT
                                 gv.retired += 1
@@ -73,6 +76,7 @@ class WBUnit:
                 else:
                     if gv.ROB and gv.ROB[0].isExecuted:
                         instr = gv.ROB.popleft()
+                        didRetire = True
                         if gv.print_trace:
                             print(instr)
                         if gv.debug_timing:
@@ -89,7 +93,7 @@ class WBUnit:
             print("WHOPOP")
             pass # ROB empty
 
-        if gv.debug_timing:
+        if gv.debug_timing and didRetire:
             print("")
 
     def resolveSpeculation(self, instr):

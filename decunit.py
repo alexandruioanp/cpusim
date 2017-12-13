@@ -42,10 +42,10 @@ class DecUnit:
         self.instr_bundle = self.last_bundle
         gv.pipeline.pipe[Stages["DECODE"]] = self.last_bundle
 
+        if gv.debug_timing:
+            print("ID@", str(self.env.now) + ":", [x.asm for x in self.instr_bundle])
         # TODO: check if there is space in ROB; stall otherwise
         while self.last_bundle:
-            if gv.debug_timing:
-                print("ID@", str(self.env.now) + ":", [x.asm for x in self.instr_bundle])
             instr = self.last_bundle[0] # peek
             rs_full = gv.stages[Stages["RS"]].push(instr)
             # if gv.debug_timing:
@@ -58,7 +58,12 @@ class DecUnit:
                 #     print("ID popped", ii)
                 gv.ROB.append(instr)
 
+                assert ii == instr
+
                 gv.R.lock_regs(instr.get_all_regs_touched(), instr)
+
+                # if self.env.now > 1430:
+                #     print("ID:", instr.asm, "locking", instr.get_all_regs_touched())
 
                 if gv.speculationEnabled:
                     instr.isSpeculative = gv.speculating
@@ -69,9 +74,14 @@ class DecUnit:
                             if gv.debug_spec:
                                 print("BLOCKING ON SECOND BRANCH", instr)
                             while not (self.last_branch.isExecuted or self.last_branch.isRetired):
+                                if gv.wb.haltRetired:
+                                    # print("RETIRED")
+                                    return
+
                                 if gv.debug_spec:
                                     print("waiting on", self.last_branch, self.last_branch.isExecuted, self.last_branch.isRetired)
                                     print([x.asm for x in self.last_bundle])
+
                                 yield self.env.timeout(1)
                             if gv.debug_spec:
                                 print("DONE WAITING on", self.last_branch)
@@ -100,6 +110,11 @@ class DecUnit:
                                 break
                     else:
                         while not instr.isExecuted:
+                            if gv.wb.haltRetired:
+                                # print("RETIRED")
+                                return
+                            if gv.debug_spec:
+                                print("waiting on", instr)
                             yield self.env.timeout(1)
                         if instr.isTaken:  # flush bundle
                             self.last_bundle = deque()

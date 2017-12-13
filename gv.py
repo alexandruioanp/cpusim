@@ -22,3 +22,5 @@ mispred = 0
 cond_br = 0
 
 print_trace = False
+
+env = None

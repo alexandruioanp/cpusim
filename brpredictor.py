@@ -1,4 +1,5 @@
 import gv
+from instruction import *
 
 class BrPredictor:
     def __init__(self):
@@ -7,6 +8,9 @@ class BrPredictor:
     def taken(self, instr):
         if instr.isUncondBranch:
             return True
+
+        if isinstance(instr, JUMPInstruction):
+            return False
 
         prediction = True
         if gv.debug_spec:

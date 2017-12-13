@@ -176,19 +176,21 @@ class JMPInstruction(BRANCHInstruction):
         self.isTaken = True
 
 
-class JUMPInstruction(BRANCHInstruction):
+class JUMPInstruction(BRANCHInstruction): # JUMP R2
     def decode(self):
         super(JUMPInstruction, self).decode()
         self.src = [self.operands[0]]
-        self.target = self.operand_vals[0]
         self.set_all_regs_touched()
 
     def execute(self):
-        if not self.executedSpeculatively:  # branch has already executed speculatively
-            gv.fu.jump(self)
-        else:
-            if gv.debug_spec:
-                print("won't branch again", self)
+        if gv.debug_spec:
+            print("EXECUTING JUMP to", self.operand_vals[0])
+        self.target = self.operand_vals[0]
+        # if not self.executedSpeculatively:  # branch has already executed speculatively
+        gv.fu.jump(self)
+        # else:
+        #     if gv.debug_spec:
+        #         print("won't branch again", self)
         self.correctPrediction = True
         self.isTaken = True
 

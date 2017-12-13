@@ -23,6 +23,7 @@ class Computor:
         gv.fu = self.fetchunit
         self.decodeunit = DecUnit(self.env)
         self.wbunit = WBUnit(self.env)
+        gv.wb = self.wbunit
         self.rs = Reservierungsstation(self.env, gv.issue_rate)
         gv.R = RegisterFile(48)
         self.clock_cnt = 0
@@ -141,6 +142,7 @@ def main(args):
             outf.write('\n')
 
     env = simpy.Environment()
+    gv.env = env
     gv.pipeline = Pipeline(env)
     pc3000 = Computor(program, env, clean_asm)
 
@@ -167,9 +169,9 @@ if __name__ == '__main__':
                         help='Run using simpy?')
     parser.add_argument('--stats', required=False, default=0, type=int, choices={0, 1},
                         help='Print run stats')
-    parser.add_argument('--bypass', required=False, default=1, type=int, choices={0, 1},
+    parser.add_argument('--bypass', required=False, default=0, type=int, choices={0, 1},
                         help='Bypass results')
-    parser.add_argument('--spec', required=False, default=1, type=int, choices={0, 1},
+    parser.add_argument('--spec', required=False, default=0, type=int, choices={0, 1},
                         help='Speculative execution')
 
     args = parser.parse_args()
