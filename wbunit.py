@@ -24,7 +24,7 @@ class WBUnit:
         didRetire = False
 
         if gv.ROB and gv.debug_timing:
-            print("(ex, sp)", [(x.asm, x.isExecuted, x.isSpeculative) for x in gv.ROB])
+            print("(ex, sp)", [(x.asm, x.pc, x.isExecuted, x.isSpeculative) for x in gv.ROB])
         try:
             for i in range(gv.retire_rate):
                 if gv.speculationEnabled:
@@ -40,7 +40,7 @@ class WBUnit:
                             if not instr.opcode == "JMP": # CHEAT
                                 gv.retired += 1
                                 if gv.print_trace:
-                                    print(instr)
+                                    print("Wrote back", instr)
 
                             if instr.opcode == "HALT":
                                 self.haltRetired = True
@@ -65,7 +65,7 @@ class WBUnit:
                                 instr3.isRetired = True
                                 if gv.debug_spec:
                                     print("flushing, (ex, spec)")
-                                    print([(x.asm, x.isExecuted, x.isSpeculative) for x in gv.ROB])
+                                    print([(x.asm, x.pc, x.isExecuted, x.isSpeculative) for x in gv.ROB])
 
                             gv.speculating = False
 
@@ -134,4 +134,4 @@ class WBUnit:
 
         if gv.debug_spec:
             print("AFTER RESOLVING SPECULATION (ex, spec)")
-            print([(x.asm, x.isExecuted, x.isSpeculative) for x in gv.ROB])
+            print([(x.asm, x.pc, x.isExecuted, x.isSpeculative) for x in gv.ROB])

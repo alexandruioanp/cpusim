@@ -51,6 +51,9 @@ class DecUnit:
             # if gv.debug_timing:
                 # print("ID pushed", instr, "to RS");
             if rs_full:
+                if gv.wb.haltRetired:
+                    # print("RETIRED")
+                    return
                 yield self.env.timeout(1)
             else:
                 ii = self.last_bundle.popleft()
@@ -73,7 +76,7 @@ class DecUnit:
                         if gv.block_on_nested_speculation and gv.speculating:
                             if gv.debug_spec:
                                 print("BLOCKING ON SECOND BRANCH", instr)
-                            while not (self.last_branch.isExecuted or self.last_branch.isRetired):
+                            while not self.last_branch.isRetired:
                                 if gv.wb.haltRetired:
                                     # print("RETIRED")
                                     return
@@ -96,11 +99,11 @@ class DecUnit:
                             predTaken = self.brpred.taken(instr)
                             instr.predictedTaken = predTaken
                             gv.speculating = True
-                            instr.executedSpeculatively = True
                             self.last_branch = instr
                             if gv.debug_spec:
                                 print("AM SPECUL:ATING NOW", instr)
                             if predTaken:
+                                instr.executedSpeculatively = True
                                 if gv.debug_spec:
                                     print("ID: WILL JUMP")
                                 gv.fu.jump(instr, speculative=True)

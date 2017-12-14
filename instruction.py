@@ -248,7 +248,7 @@ class WRSInstruction(Instruction):
             self.operand_vals[0] += 1
 
     def writeback(self):
-        if not gv.debug_timing:
+        if not gv.suppress_prog_stdout:
             sys.stdout.write(self.result),
             sys.stdout.flush()
 
@@ -319,7 +319,7 @@ class WRInstruction(Instruction):
         self.result = str(self.operand_vals[0])
 
     def writeback(self):
-        if not gv.debug_timing:
+        if not gv.suppress_prog_stdout:
             sys.stdout.write(self.result)
             sys.stdout.flush()
 

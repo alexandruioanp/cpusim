@@ -171,7 +171,7 @@ if __name__ == '__main__':
                         help='Print run stats')
     parser.add_argument('--bypass', required=False, default=0, type=int, choices={0, 1},
                         help='Bypass results')
-    parser.add_argument('--spec', required=False, default=0, type=int, choices={0, 1},
+    parser.add_argument('--spec', required=False, default=1, type=int, choices={0, 1},
                         help='Speculative execution')
 
     args = parser.parse_args()

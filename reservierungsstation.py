@@ -103,14 +103,11 @@ class Reservierungsstation:
             instr.canDispatch = all_src_regs_free and all_dest_regs_free \
                 and not (instr.isMemAccess and (mem_access_in_flight or mem_access_before_instr))
 
-            if self.env.now > 1450 and instr.asm == "ADDI R2,R0,16":
-                if not all_dest_regs_free:
-                    print("NOT ALL DEST REGS FREE")
-                    print(str(instr))
-                    for r in instr.get_dest_regs():
-                        if not gv.R.is_available(r, instr):
-                            print(r, "locked by", gv.R.who_locked(r))
+            if instr.canDispatch and instr.isSpeculative and instr.isStore:
+                # print("WRONG!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+                print("WRONG????????????", instr.asm)
 
+        assert not (instr.canDispatch and instr.isSpeculative and instr.isStore)
 
     # check if instructions can go ahead, push them to available execution units
     def do(self):

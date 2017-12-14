@@ -24,10 +24,25 @@ class FetchUnit:
         self.pc = target
         gv.pipeline.pipe[Stages["FETCH"]] = []
 
+    # function is only called if the prediction was incorrect
     def undoSpeculation(self, instr):
         if gv.debug_spec:
-            print("UNDOINGGGGGGGGGGGGG", instr, instr.pc + 1)
-        self.pc = instr.pc + 1
+            print("UNDOINGGGGGGGGGGGGG", instr, "at", instr.pc)
+            print(">>>>>>>>>> PREDICTED TAKEN", instr.predictedTaken)
+            print(">>>>>>>>>> Actually TAKEN", instr.isTaken)
+
+        if instr.isTaken: # prediction was NOT TAKEN; it actually was TAKEN
+            assert instr.predictedTaken == False
+            self.pc = instr.target
+            if gv.debug_spec:
+                print("will continue from", self.pc)
+        else: # prediction was TAKEN; it actually was NOT TAKEN
+            assert instr.predictedTaken == True
+            self.pc = instr.pc + 1
+            if gv.debug_spec:
+                print("will continue from", self.pc)
+            pass
+
         if gv.debug_spec:
             print("next to fetch:", self.instruction_stream[self.pc:self.pc+3])
             if gv.pipeline.pipe[Stages["FETCH"]]:
