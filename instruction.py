@@ -82,6 +82,8 @@ class Instruction():
         self.isLoad = self.opcode == "LOAD"
         self.isMemAccess = self.isStore or self.isLoad
 
+        self.type = "ALU"
+
         if len(comps) > 1:
             self.operands = comps[1]
             self.operands = self.operands.split(',')
@@ -142,12 +144,16 @@ class Instruction():
 
 
 class BRANCHInstruction(Instruction):
+    def decode(self):
+        super(BRANCHInstruction, self).decode()
+        self.type = "BRANCH"
     pass
 
 
 class MEMInstruction(Instruction):
     def decode(self):
         super(MEMInstruction, self).decode()
+        self.type = "MEMORY"
         self.duration = 5
 
 

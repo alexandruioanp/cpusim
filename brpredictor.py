@@ -12,7 +12,18 @@ class BrPredictor:
         if isinstance(instr, JUMPInstruction):
             return False
 
+        # print(instr.pc, instr.target)
+
+        # if instr.pc < instr.target:
+        #     # forward branch not taken
+        #     prediction = False
+        # else:
+        #     # backward branch taken
+        #     prediction = True
+
         prediction = True
+
         if gv.debug_spec:
             print("predicting ", instr, "as", "taken" if prediction else "not taken")
+
         return prediction

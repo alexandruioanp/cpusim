@@ -13,16 +13,9 @@ class RegisterFile:
         self._R[reg] = val
 
     def lock_reg(self, reg, instr):
-        # if gv.env.now > 1430:
-        #     print("REG:", instr.asm, "locking", reg)
-
         if self.available[reg]:
             self.available[reg] = False
             self.locked_by[reg] = instr
-        else:
-            pass
-            # if gv.env.now > 1430:
-            #     print("REG:", reg, "already locked by", self.locked_by[reg])
 
     def lock_regs(self, lst, instr):
         for reg in lst:
@@ -40,8 +33,6 @@ class RegisterFile:
         #     raise Exception(str(instr) + " trying to unlock register " + str(reg) +\
         #                     " locked by " + str(self.locked_by[reg]))
 
-        # if gv.env.now > 1430:
-        #     print("REG:", instr, "unlocking", reg, ",locked by", self.locked_by[reg])
 
         self.available[reg] = True
         self.locked_by[reg] = None

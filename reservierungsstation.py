@@ -6,9 +6,15 @@ from collections import deque
 from instruction import *
 
 class Reservierungsstation:
-    def __init__(self, env, num_eu):
+    def __init__(self, env, eu_conf):
         self.env = env
-        self.num_eu = num_eu
+        self.eu_conf = eu_conf
+        self.avail_eu = dict(self.eu_conf)
+        self.num_eu = 0
+
+        for type in self.eu_conf.keys():
+            self.num_eu += self.eu_conf[type]
+
         self.execUnits = []
         self.buffer_size = 16
         assert self.buffer_size < gv.ROB_entries
@@ -17,7 +23,7 @@ class Reservierungsstation:
         self.result_bus = {-1: -1}
         self.instr_in_flight = []
 
-        for i in range(num_eu):
+        for i in range(self.num_eu):
             self.execUnits.append(ExecUnit(self.env, i, self.result_bus))
 
     def push(self, instr):

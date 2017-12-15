@@ -48,8 +48,8 @@ class DecUnit:
         while self.last_bundle:
             instr = self.last_bundle[0] # peek
             rs_full = gv.stages[Stages["RS"]].push(instr)
-            # if gv.debug_timing:
-                # print("ID pushed", instr, "to RS");
+            if gv.debug_timing:
+                print("ID pushed", instr, "to RS");
             if rs_full:
                 if gv.wb.haltRetired:
                     # print("RETIRED")
@@ -57,16 +57,11 @@ class DecUnit:
                 yield self.env.timeout(1)
             else:
                 ii = self.last_bundle.popleft()
-                # if gv.debug_timing:
-                #     print("ID popped", ii)
                 gv.ROB.append(instr)
 
                 assert ii == instr
 
                 gv.R.lock_regs(instr.get_all_regs_touched(), instr)
-
-                # if self.env.now > 1430:
-                #     print("ID:", instr.asm, "locking", instr.get_all_regs_touched())
 
                 if gv.speculationEnabled:
                     instr.isSpeculative = gv.speculating

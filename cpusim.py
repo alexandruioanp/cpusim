@@ -24,7 +24,7 @@ class Computor:
         self.decodeunit = DecUnit(self.env)
         self.wbunit = WBUnit(self.env)
         gv.wb = self.wbunit
-        self.rs = Reservierungsstation(self.env, gv.issue_rate)
+        self.rs = Reservierungsstation(self.env, gv.eu_conf)
         gv.R = RegisterFile(48)
         self.clock_cnt = 0
         self.print_stats = False
@@ -142,7 +142,6 @@ def main(args):
             outf.write('\n')
 
     env = simpy.Environment()
-    gv.env = env
     gv.pipeline = Pipeline(env)
     pc3000 = Computor(program, env, clean_asm)
 
