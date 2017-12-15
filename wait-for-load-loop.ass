@@ -1,0 +1,66 @@
+XOR R0,R0,R0
+LDI R1,10
+L1:
+LDI R2,13
+LDI R3,3
+LDI R4,52
+LDI R5,374
+LDI R6,-41
+LDI R7,11
+LDI R8,100
+LDI R9,-92891
+LDI R10,12345
+SUBI R1,R1,1
+LOAD R11,R0,0
+BLTZ R11,L10
+BGEZ R1,L1
+WR R2
+WRS 28
+WR R3
+WRS 28
+WR R4
+WRS 28
+WR R5
+WRS 28
+WR R6
+WRS 28
+WR R7
+WRS 28
+WR R8
+WRS 28
+WR R9
+WRS 28
+WR R10
+WRS 28
+L10:
+HALT
+DATA 0 ;  n
+DATA 0 ;  n
+DATA 0 ;  n
+DATA 0 ;  n
+DATA 0 ;  a
+DATA 0 ;  a
+DATA 0 ;  a
+DATA 0 ;  a
+DATA 0 ;  b
+DATA 0 ;  b
+DATA 0 ;  b
+DATA 0 ;  b
+DATA 0 ;  c
+DATA 0 ;  c
+DATA 0 ;  c
+DATA 0 ;  c
+DATA 0 ;  d
+DATA 0 ;  d
+DATA 0 ;  d
+DATA 0 ;  d
+DATA 0 ;  e
+DATA 0 ;  e
+DATA 0 ;  e
+DATA 0 ;  e
+DATA 0 ;  i
+DATA 0 ;  i
+DATA 0 ;  i
+DATA 0 ;  i
+DATA 10 ;  
+DATA 0 ;  
