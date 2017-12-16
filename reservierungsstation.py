@@ -37,6 +37,17 @@ class Reservierungsstation:
         return len(self.shelved_instr) >= self.buffer_size
 
     def dispatch_check(self, instr):
+        if instr.isStore and instr.isSpeculative:
+            instr.canDispatch = False
+            return
+
+        all_src_regs_free = gv.R.all_available(instr.get_src_regs(), instr)
+        all_dest_regs_free = gv.R.all_available(instr.get_dest_regs(), instr)
+
+        if not gv.bypassing and not (all_src_regs_free and all_dest_regs_free):
+            instr.canDispatch = False
+            return
+
         mem_access_before_instr = False
         for x in self.shelved_instr:
             if x == instr:
@@ -44,6 +55,12 @@ class Reservierungsstation:
             if x.isMemAccess:
                 mem_access_before_instr = True
                 break
+
+        mem_access_in_flight = any(y.isMemAccess for y in self.instr_in_flight)
+
+        if instr.isMemAccess and (mem_access_in_flight or mem_access_before_instr):
+            instr.canDispatch = False
+            return
 
         # shelf test ok?
         #   s     s   Y
@@ -64,21 +81,19 @@ class Reservierungsstation:
                     print("key error")
                     pass
 
-        all_src_regs_free = gv.R.all_available(instr.get_src_regs(), instr)
-        which_locked = gv.R.which_locked(instr.get_src_regs(), instr)
 
-        results_forwarded = True
+        if gv.bypassing:
+            which_locked = gv.R.which_locked(instr.get_src_regs(), instr)
 
-        if which_locked:
-            # print("Are locked:", which_locked, "asking", instr)
-            # print(self.result_bus)
-            for r in which_locked:
-                if "R"+str(r) not in self.result_bus.keys():
-                    results_forwarded = False
-            # print("")
+            results_forwarded = True
 
-        all_dest_regs_free = gv.R.all_available(instr.get_dest_regs(), instr)
-        mem_access_in_flight = any(y.isMemAccess for y in self.instr_in_flight)
+            if which_locked:
+                # print("Are locked:", which_locked, "asking", instr)
+                # print(self.result_bus)
+                for r in which_locked:
+                    if "R"+str(r) not in self.result_bus.keys():
+                        results_forwarded = False
+                # print("")
 
         if gv.bypassing:
             which_locked = gv.R.which_locked(instr.get_src_regs(), instr)
@@ -114,10 +129,9 @@ class Reservierungsstation:
                 and not (instr.isStore and instr.isSpeculative)
 
             if instr.canDispatch and instr.isSpeculative and instr.isStore:
-                # print("WRONG!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
                 print("WRONG????????????", instr.asm)
 
-        assert not (instr.canDispatch and instr.isSpeculative and instr.isStore)
+        # assert not (instr.canDispatch and instr.isSpeculative and instr.isStore)
 
     def lock_eu(self, instr):
         self.avail_eu[instr.type] -= 1
@@ -134,36 +148,15 @@ class Reservierungsstation:
 
     # check if instructions can go ahead, push them to available execution units
     def do(self):
-        # process instructions that have just completed
-        # read bypassed data on bus, regs
-        # print("in flight (ret, mis, exec):", [(x.asm, x.isRetired, x.misspeculated, x.isExecuted) for x in self.instr_in_flight])
-        for instr in list(self.instr_in_flight):
-            if instr.isRetired or instr.misspeculated:
-                self.instr_in_flight.remove(instr)
-                gv.R.unlock_regs(instr.get_all_regs_touched(), instr)
-            if  instr.misspeculated and gv.debug_spec:
-                print("Misspeculated instr in flight", instr.asm)
+        self.processRetiredInstructions()
 
         for instr in self.shelved_instr:
             gv.R.lock_regs(instr.get_all_regs_touched(), instr)
 
-        for eu in self.execUnits:
-                if eu.status == "READY" and eu.instr: # finished and not processed
-                    if gv.debug_timing:
-                        print(eu.instr, "unlocked EU:", self.avail_eu, "ready", eu.instr.isExecuted)
-                    self.release_eu(eu.instr)
-                    if gv.bypassing:
-                        # get bypassed results
-                        if eu.bypassed:
-                            (dest, val) = eu.bypassed
-                            if dest:
-                                self.result_bus[dest] = val
-                    eu.instr = None # mark as processed
-
+        self.cleanEUs()
 
         for eu in self.execUnits:
             if eu.status == "READY":
-                # check if any instr can go ahead, lock dest regs, dispatch it
                 for instr in list(self.shelved_instr):
                     if instr.misspeculated:
                         if gv.debug_spec:
@@ -173,36 +166,60 @@ class Reservierungsstation:
                         continue
 
                     self.dispatch_check(instr)
+
                     if instr.canDispatch and self.is_eu_avail(instr):
-                        if gv.debug_timing:
-                            print("dispatched", instr)
-                        #dispatch
-                        self.lock_eu(instr)
-                        if gv.debug_timing:
-                            print(instr, "locked EU:", self.avail_eu)
-                        self.instr_in_flight.append(instr)
-                        self.shelved_instr.remove(instr)
-
-                        if gv.bypassing:
-                            instr.evaluate_operands(self.result_bus)
-                        else:
-                            instr.evaluate_operands({})
-
-                        if gv.debug_timing:
-                            print("RS dispatching", instr)
-
-                        self.env.process(eu.do(instr))
-
-                        if gv.bypassing:
-                            for r in instr.get_dest_regs():
-                                try:
-                                    del self.result_bus["R" + str(r)]
-                                except KeyError:
-                                    pass
-
+                        self.dispatch(instr, eu)
                         break
-                    else:
-                        pass
 
         yield self.env.timeout(1)
+
+    def dispatch(self, instr, eu):
+        assert not (instr.canDispatch and instr.isSpeculative and instr.isStore)
+        if gv.debug_timing:
+            print("dispatched", instr)
+            print(instr, "locked EU:", self.avail_eu)
+
+        self.lock_eu(instr)
+        self.instr_in_flight.append(instr)
+        self.shelved_instr.remove(instr)
+
+        if gv.bypassing:
+            instr.evaluate_operands(self.result_bus)
+        else:
+            instr.evaluate_operands({})
+
+        if gv.debug_timing:
+            print("RS dispatching", instr)
+
+        self.env.process(eu.do(instr))
+
+        # results on data bus no longer valid
+        if gv.bypassing:
+            for r in instr.get_dest_regs():
+                try:
+                    del self.result_bus["R" + str(r)]
+                except KeyError:
+                    pass
+
+    def processRetiredInstructions(self):
+        for instr in list(self.instr_in_flight):
+            if instr.isRetired or instr.misspeculated:
+                self.instr_in_flight.remove(instr)
+                gv.R.unlock_regs(instr.get_all_regs_touched(), instr)
+            if instr.misspeculated and gv.debug_spec:
+                print("Misspeculated instr in flight", instr.asm)
+
+    # process instructions that have just completed
+    def cleanEUs(self):
+        for eu in self.execUnits:
+            if eu.status == "READY" and eu.instr: # finished and not processed
+                if gv.debug_timing:
+                    print(eu.instr, "unlocked EU:", self.avail_eu, "ready", eu.instr.isExecuted)
+                self.release_eu(eu.instr)
+                # read bypassed data on bus, regs
+                if gv.bypassing and eu.bypassed:
+                    (dest, val) = eu.bypassed
+                    if dest:
+                        self.result_bus[dest] = val
+                eu.instr = None # mark as processed
 

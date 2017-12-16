@@ -29,4 +29,4 @@ debug_spec = False
 debug_timing = False
 
 print_trace = False
-suppress_prog_stdout = True
+suppress_prog_stdout = False
