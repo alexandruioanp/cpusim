@@ -27,11 +27,14 @@ class Reservierungsstation:
             self.execUnits.append(ExecUnit(self.env, i, self.result_bus))
 
     def push(self, instr):
-        if len(self.shelved_instr) < self.buffer_size: # can shelve more
+        if not self.is_full(): # can shelve more
             self.shelved_instr.append(instr)
             return 0
         else:
             return 1
+
+    def is_full(self):
+        return len(self.shelved_instr) >= self.buffer_size
 
     def dispatch_check(self, instr):
         mem_access_before_instr = False
@@ -107,13 +110,27 @@ class Reservierungsstation:
                     pass
         else:
             instr.canDispatch = all_src_regs_free and all_dest_regs_free \
-                and not (instr.isMemAccess and (mem_access_in_flight or mem_access_before_instr))
+                and not (instr.isMemAccess and (mem_access_in_flight or mem_access_before_instr)) \
+                and not (instr.isStore and instr.isSpeculative)
 
             if instr.canDispatch and instr.isSpeculative and instr.isStore:
                 # print("WRONG!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
                 print("WRONG????????????", instr.asm)
 
         assert not (instr.canDispatch and instr.isSpeculative and instr.isStore)
+
+    def lock_eu(self, instr):
+        self.avail_eu[instr.type] -= 1
+        assert self.avail_eu[instr.type] >= 0
+
+    def release_eu(self, instr):
+        self.avail_eu[instr.type] += 1
+        if self.avail_eu[instr.type] > self.eu_conf[instr.type]:
+            print(instr, self.avail_eu[instr.type], self.eu_conf[instr.type])
+        assert self.avail_eu[instr.type] <= self.eu_conf[instr.type]
+
+    def is_eu_avail(self, instr):
+        return self.avail_eu[instr.type] > 0
 
     # check if instructions can go ahead, push them to available execution units
     def do(self):
@@ -132,6 +149,9 @@ class Reservierungsstation:
 
         for eu in self.execUnits:
                 if eu.status == "READY" and eu.instr: # finished and not processed
+                    if gv.debug_timing:
+                        print(eu.instr, "unlocked EU:", self.avail_eu, "ready", eu.instr.isExecuted)
+                    self.release_eu(eu.instr)
                     if gv.bypassing:
                         # get bypassed results
                         if eu.bypassed:
@@ -139,6 +159,7 @@ class Reservierungsstation:
                             if dest:
                                 self.result_bus[dest] = val
                     eu.instr = None # mark as processed
+
 
         for eu in self.execUnits:
             if eu.status == "READY":
@@ -152,8 +173,13 @@ class Reservierungsstation:
                         continue
 
                     self.dispatch_check(instr)
-                    if instr.canDispatch:
+                    if instr.canDispatch and self.is_eu_avail(instr):
+                        if gv.debug_timing:
+                            print("dispatched", instr)
                         #dispatch
+                        self.lock_eu(instr)
+                        if gv.debug_timing:
+                            print(instr, "locked EU:", self.avail_eu)
                         self.instr_in_flight.append(instr)
                         self.shelved_instr.remove(instr)
 
@@ -161,6 +187,9 @@ class Reservierungsstation:
                             instr.evaluate_operands(self.result_bus)
                         else:
                             instr.evaluate_operands({})
+
+                        if gv.debug_timing:
+                            print("RS dispatching", instr)
 
                         self.env.process(eu.do(instr))
 

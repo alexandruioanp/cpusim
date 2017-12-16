@@ -14,14 +14,14 @@ class BrPredictor:
 
         # print(instr.pc, instr.target)
 
-        # if instr.pc < instr.target:
-        #     # forward branch not taken
-        #     prediction = False
-        # else:
-        #     # backward branch taken
-        #     prediction = True
+        if instr.pc < instr.target:
+            # forward branch not taken
+            prediction = False
+        else:
+            # backward branch taken
+            prediction = True
 
-        prediction = True
+        # prediction = True
 
         if gv.debug_spec:
             print("predicting ", instr, "as", "taken" if prediction else "not taken")

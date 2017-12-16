@@ -13,6 +13,7 @@ class DecUnit:
         self.status = "READY"
         self.brpred = BrPredictor()
         self.last_branch = None
+        self.instr_bundle = []
 
     def do(self):
         self.instr_bundle = gv.pipeline.pipe[Stages["DECODE"]]
@@ -34,9 +35,6 @@ class DecUnit:
                 else:
                     self.last_bundle.append(instr)
 
-        # if gv.debug_timing:
-        #     print("ID@", str(self.env.now) + ":", [x.asm for x in self.instr_bundle])
-
         self.status = "BUSY"
 
         self.instr_bundle = self.last_bundle
@@ -44,30 +42,18 @@ class DecUnit:
 
         if gv.debug_timing:
             print("ID@", str(self.env.now) + ":", [x.asm for x in self.instr_bundle])
+
         # TODO: check if there is space in ROB; stall otherwise
         while self.last_bundle:
             instr = self.last_bundle[0] # peek
-            rs_full = gv.stages[Stages["RS"]].push(instr)
-            if gv.debug_timing:
-                print("ID pushed", instr, "to RS");
-            if rs_full:
+
+            if gv.stages[Stages["RS"]].is_full():
                 if gv.wb.haltRetired:
-                    # print("RETIRED")
                     return
                 yield self.env.timeout(1)
             else:
-                ii = self.last_bundle.popleft()
-                gv.ROB.append(instr)
-
-                assert ii == instr
-
-                gv.R.lock_regs(instr.get_all_regs_touched(), instr)
-
                 if gv.speculationEnabled:
-                    instr.isSpeculative = gv.speculating
-
-                if instr and instr.isBranch:
-                    if gv.speculationEnabled:
+                    if instr.isBranch:
                         if gv.block_on_nested_speculation and gv.speculating:
                             if gv.debug_spec:
                                 print("BLOCKING ON SECOND BRANCH", instr)
@@ -77,20 +63,19 @@ class DecUnit:
                                     return
 
                                 if gv.debug_spec:
-                                    print("waiting on", self.last_branch, self.last_branch.isExecuted, self.last_branch.isRetired)
+                                    print("waiting on", self.last_branch, self.last_branch.isExecuted,
+                                          self.last_branch.isRetired)
                                     print([x.asm for x in self.last_bundle])
 
                                 yield self.env.timeout(1)
                             if gv.debug_spec:
                                 print("DONE WAITING on", self.last_branch)
-                                print(self.last_bundle)
-                            # if self.last_branch.isTaken:  # flush bundle
-                            #     print("ID flushing bundle before", self.last_bundle)
-                            #     self.last_bundle = deque()
-                            #     print("ID flushing bundle after", self.last_bundle)
-                            #     break
-                        # else:
+                                print("last bundle", [x.asm for x in self.last_bundle])
+
                         if not instr.misspeculated:
+                            self.issue(instr)
+                            if gv.debug_spec:
+                                print("ID will issue (misspec?)", instr, instr.misspeculated)
                             predTaken = self.brpred.taken(instr)
                             instr.predictedTaken = predTaken
                             gv.speculating = True
@@ -104,25 +89,45 @@ class DecUnit:
                                 gv.fu.jump(instr, speculative=True)
                                 if gv.debug_spec:
                                     print("last bundle", [x.asm for x in self.last_bundle])
-                                self.last_bundle = deque() # ?
+                                self.last_bundle = deque()  # ?
                                 break
                     else:
+                        self.issue(instr)
+                else:
+                    self.issue(instr)
+
+                    if instr.isBranch:
                         while not instr.isExecuted:
                             if gv.wb.haltRetired:
-                                # print("RETIRED")
                                 return
                             if gv.debug_spec:
                                 print("waiting on", instr)
                             yield self.env.timeout(1)
-                        if instr.isTaken:  # flush bundle
+                        if instr.isTaken:
                             self.last_bundle = deque()
                             break
 
         self.status = "READY"
 
+    def issue(self, instr):
+        assert self.last_bundle.popleft() == instr
+
+        if gv.debug_timing:
+            print("ID pushed", instr, "to RS");
+
+        gv.ROB.append(instr)
+        gv.stages[Stages["RS"]].push(instr)
+
+        gv.R.lock_regs(instr.get_all_regs_touched(), instr)
+
+        if gv.speculationEnabled:
+            instr.isSpeculative = gv.speculating
+
     def flush(self):
         if gv.debug_spec:
-            print("ID bundle flushed", [x.asm for x in self.last_bundle])
+            print("Flushing ID bundle", [x.asm for x in self.last_bundle])
+        for instr in self.last_bundle:
+            instr.misspeculated = True
         self.last_bundle = deque()
         gv.pipeline.pipe[Stages["DECODE"]] = []
 

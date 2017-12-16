@@ -58,7 +58,10 @@ class Pipeline:
         for i in reversed(range(1, self.NUM_STAGES)):
             if gv.stages[i].status == "READY" and gv.stages[i - 1].status == "READY":
                 if gv.debug_timing:
-                    print("moving", [x.asm for x in self.pipe[i - 1]], "from", rStages[i-1], "to", rStages[i])
+                    if self.pipe[i - 1]:
+                        print("moving", [x.asm for x in self.pipe[i - 1]], "from", rStages[i-1], "to", rStages[i])
+                    else:
+                        print("moving [] from", rStages[i - 1], "to", rStages[i])
                 self.pipe[i] = self.pipe[i - 1]
                 self.pipe[i - 1] = None
             else:

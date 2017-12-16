@@ -40,7 +40,7 @@ class WBUnit:
                             if not instr.opcode == "JMP": # CHEAT
                                 gv.retired += 1
                                 if gv.print_trace:
-                                    print("Wrote back", instr)
+                                    print(instr)
 
                             if instr.opcode == "HALT":
                                 self.haltRetired = True
@@ -56,7 +56,7 @@ class WBUnit:
                                 gv.cond_br += 1
 
                             if gv.debug_spec:
-                                print("Resolving speculation because of", instr, instr.isSpeculative, instr.isExecuted)
+                                print("Resolving speculation because of (spec, ex)", instr, instr.isSpeculative, instr.isExecuted)
 
                             self.resolveSpeculation(instr)
 

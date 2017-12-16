@@ -94,6 +94,8 @@ class Instruction():
         self.dest = []
         self.duration = 1
 
+        # self.issued = False
+
         self.isExecuted = False
         self.isRetired = False
         self.isTaken = False
@@ -336,6 +338,7 @@ class SUBInstruction(REGWRITEBACKInstruction):
         self.dest = self.operands[0]
         self.src = list(self.operands[1:])
         self.set_all_regs_touched()
+        self.duration = 5
 
     def execute(self):
         self.result = self.operand_vals[0] - self.operand_vals[1]
