@@ -16,85 +16,93 @@ class WBUnit:
         if gv.debug_timing:
             print("WB@ " + str(self.env.now) + ": ", end='')
 
+        assert len(gv.ROB) <= gv.ROB_entries
+
         self.writeback()
 
         yield self.env.timeout(1)
 
     def writeback(self):
-        didRetire = False
-
         if gv.ROB and gv.debug_timing:
             print("(ex, sp)", [(x.asm, x.pc, x.isExecuted, x.isSpeculative) for x in gv.ROB])
-        try:
-            for i in range(gv.retire_rate):
-                if gv.speculationEnabled:
-                    if gv.ROB and gv.ROB[0].isExecuted:
-                        instr = gv.ROB[0]
-                        instr.isRetired = True
+        # try:
+        for i in range(gv.retire_rate):
+            if gv.speculationEnabled:
+                if gv.ROB and gv.ROB[0].isExecuted:
+                    instr = gv.ROB[0]
+                    instr.isRetired = True
 
-                        if not instr.isSpeculative:
-                            gv.ROB.popleft()
-                            instr.writeback()
-                            didRetire = True
-                            # print("Written bakc", instr)
-                            if not instr.opcode == "JMP": # CHEAT
-                                gv.retired += 1
-                                if gv.print_trace:
-                                    print(instr)
-
-                            if instr.opcode == "HALT":
-                                self.haltRetired = True
-                                return
-
-                        if gv.debug_timing:
-                            print(instr.asm + ", ", end='')
-
-                        if instr.isBranch:
-                            gv.num_branches += 1
-
-                            if instr.isCondBranch:
-                                gv.cond_br += 1
-
-                            if gv.debug_spec:
-                                print("Resolving speculation because of (spec, ex)", instr, instr.isSpeculative, instr.isExecuted)
-
-                            self.resolveSpeculation(instr)
-
-                            while gv.ROB and gv.ROB[0].misspeculated:
-                                instr3 = gv.ROB.popleft()
-                                instr3.isRetired = True
-                                if gv.debug_spec:
-                                    print("flushing, (ex, spec)")
-                                    print([(x.asm, x.pc, x.isExecuted, x.isSpeculative) for x in gv.ROB])
-
-                            gv.speculating = False
-
-                            if gv.debug_spec:
-                                print("Resolved speculation @ WB. Spec?", gv.speculating)
-                    else:
-                        break
-                else:
-                    if gv.ROB and gv.ROB[0].isExecuted:
-                        instr = gv.ROB.popleft()
-                        didRetire = True
-                        if gv.print_trace:
-                            print(instr)
-                        if gv.debug_timing:
-                            print(instr.asm + ", ", end='')
+                    if not instr.isSpeculative:
+                        gv.ROB.popleft()
                         instr.writeback()
-                        instr.isRetired = True
-                        gv.retired += 1
+                        if gv.reg_renaming:
+                            gv.R.release_tags(instr)
+
+                        if not instr.opcode == "JMP": # CHEAT
+                            gv.retired += 1
+                            if gv.print_trace:
+                                print(instr)
+
                         if instr.opcode == "HALT":
                             self.haltRetired = True
                             return
-                    else:
-                        break
-        except IndexError:
-            print("WHOPOP")
-            pass # ROB empty
 
-        if gv.debug_timing and didRetire:
+                    if gv.debug_timing:
+                        print(instr.asm + ", ", end='')
+
+                    if instr.isBranch:
+                        gv.num_branches += 1
+
+                        if instr.isCondBranch:
+                            gv.cond_br += 1
+
+                        if gv.debug_spec:
+                            print("Resolving speculation because of (spec, ex)", instr, instr.isSpeculative, instr.isExecuted)
+
+                        self.resolveSpeculation(instr)
+
+                        while gv.ROB and gv.ROB[0].misspeculated:
+                            instr3 = gv.ROB.popleft()
+                            instr3.isRetired = True
+                            if gv.debug_spec:
+                                print("flushing, (ex, spec)")
+                                print([(x.asm, x.pc, x.isExecuted, x.isSpeculative) for x in gv.ROB])
+
+                            if gv.reg_renaming:
+                                gv.R.release_tags(instr3)
+                        # nested speculation
+                        gv.speculating = False
+
+                        if gv.debug_spec:
+                            print("Resolved speculation @ WB. Spec?", gv.speculating)
+                else:
+                    break
+            else:
+                if gv.ROB and gv.ROB[0].isExecuted:
+                    instr = gv.ROB.popleft()
+                    if gv.print_trace:
+                        print(instr)
+                    if gv.debug_timing:
+                        print(instr.asm + ", ", end='')
+                    instr.writeback()
+                    if gv.reg_renaming:
+                        gv.R.release_tags(instr)
+                    instr.isRetired = True
+                    gv.retired += 1
+                    if instr.opcode == "HALT":
+                        self.haltRetired = True
+                        return
+                else:
+                    break
+        # except IndexError:
+            # print("WHOPOP")
+            # pass # ROB empty
+
+        if gv.debug_timing:
             print("")
+
+    def is_full(self):
+        return len(gv.ROB) == gv.ROB_entries
 
     def resolveSpeculation(self, instr):
         if instr.isTaken != instr.predictedTaken: # wrong
@@ -103,6 +111,7 @@ class WBUnit:
                 print("MUST UNDO")
                 print(instr, "was", instr.isTaken, "prediction", instr.predictedTaken)
             gv.fu.undoSpeculation(instr)
+            gv.R.undoSpeculation()
             gv.stages[Stages["DECODE"]].flush()
             gv.mispred += 1
         else:

@@ -25,6 +25,8 @@ class DecUnit:
             self.last_bundle = deque()
             for idx, instr in enumerate(self.instr_bundle):
                 instr.decode()
+                if gv.reg_renaming:
+                    gv.R.rename(instr)
 
                 if not gv.speculationEnabled:
                     if instr.isUncondBranch:
@@ -50,16 +52,22 @@ class DecUnit:
             if gv.stages[Stages["RS"]].is_full():
                 if gv.wb.haltRetired:
                     return
+                if gv.debug_timing:
+                    print(">>>>>>>>>>>>>> RS FULL")
+                yield self.env.timeout(1)
+            elif gv.wb.is_full():
+                if gv.debug_timing:
+                    print(">>>>>>>>>>>>>> ROB FULL")
                 yield self.env.timeout(1)
             else:
                 if gv.speculationEnabled:
                     if instr.isBranch:
+                        # nested
                         if gv.block_on_nested_speculation and gv.speculating:
                             if gv.debug_spec:
                                 print("BLOCKING ON SECOND BRANCH", instr)
                             while not self.last_branch.isRetired:
                                 if gv.wb.haltRetired:
-                                    # print("RETIRED")
                                     return
 
                                 if gv.debug_spec:
@@ -68,6 +76,7 @@ class DecUnit:
                                     print([x.asm for x in self.last_bundle])
 
                                 yield self.env.timeout(1)
+
                             if gv.debug_spec:
                                 print("DONE WAITING on", self.last_branch)
                                 print("last bundle", [x.asm for x in self.last_bundle])
@@ -76,17 +85,17 @@ class DecUnit:
                             self.issue(instr)
                             if gv.debug_spec:
                                 print("ID will issue (misspec?)", instr, instr.misspeculated)
-                            predTaken = self.brpred.taken(instr)
-                            instr.predictedTaken = predTaken
+                            instr.predictedTaken = self.brpred.taken(instr)
                             gv.speculating = True
                             self.last_branch = instr
                             if gv.debug_spec:
                                 print("AM SPECUL:ATING NOW", instr)
-                            if predTaken:
+                            if instr.predictedTaken:
                                 instr.executedSpeculatively = True
                                 if gv.debug_spec:
                                     print("ID: WILL JUMP")
                                 gv.fu.jump(instr, speculative=True)
+                                gv.R.speculate()
                                 if gv.debug_spec:
                                     print("last bundle", [x.asm for x in self.last_bundle])
                                 self.last_bundle = deque()  # ?

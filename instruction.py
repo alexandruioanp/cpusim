@@ -22,17 +22,17 @@ def get_instruction(line):
 def getNOP():
     return NOPInstruction("NOP")
 
-debug = True
-debug = False
-
 class Instruction():
     def __str__(self):
-        return self.opcode + " " + str(self.operands)
+        return self.asm
 
     def __init__(self, asm):
+        self.debug = True
+        self.debug = False
+
         self.asm = asm
 
-    def __get_reg_nums(self):
+    def _get_reg_nums(self):
         regs_src = []
         regs_dest = []
 
@@ -55,17 +55,49 @@ class Instruction():
 
         return {"src": regs_src, "dest": regs_dest}
 
-    def get_src_regs(self):
+    def set_renamed_regs(self, src, dest):
+        if gv.debug_ren:
+            print('--------------------------------')
+            print(">>>>> before", "src", self.src, "dest", self.dest)
+
+            print("__get_reg_nums()", self._get_reg_nums())
+            print("srcreg", self.srcRegNums)
+            print("destreg", self.destRegNums)
+            print("allreg", self.allRegNums)
+
+        temp_src = []
+        for i in range(len(self.src)):
+            try:
+                int(self.src[i])
+                temp_src.append(self.src[i])
+            except ValueError:
+                temp_src.append("R" + str(src.pop(0)))
+
+        self.src = temp_src
+
+        if dest:
+            self.dest  = "R" + str(dest[0])
+        self.set_all_regs_touched()
+
+        if gv.debug_ren:
+            print(">>>>> after", "src", self.src, "dest", self.dest)
+            print("__get_reg_nums()", self._get_reg_nums())
+            print("srcreg", self.srcRegNums)
+            print("destreg", self.destRegNums)
+            print("allreg", self.allRegNums)
+            print('--------------------------------')
+
+    def get_unique_src_regs(self):
         return self.srcRegNums
 
-    def get_dest_regs(self):
+    def get_unique_dest_regs(self):
         return self.destRegNums
 
     def get_all_regs_touched(self):
         return self.allRegNums
 
     def set_all_regs_touched(self):
-        regsTouched = self.__get_reg_nums()
+        regsTouched = self._get_reg_nums()
 
         self.srcRegNums = list(set(regsTouched["src"]))
         self.destRegNums = list(set(regsTouched["dest"]))
@@ -111,32 +143,33 @@ class Instruction():
         self.allRegNums = []
 
     def evaluate_operands(self, bypass):
-        if debug:
+        if self.debug:
             print("-" * 30)
-        if debug:
+        if self.debug:
             print("Evaluating", str(self))
 
         self.operand_vals = []
 
         for idx, src in enumerate(self.src):
-            if debug:
+            if self.debug:
                 print(idx, ".src", src)
             try:
                 src = int(src)
 
-                if debug:
+                if self.debug:
                     print("using immediate value")
                 self.operand_vals.append(src)
             except ValueError:
                 if src in bypass.keys():
-                    if debug:
+                    if self.debug:
                         print("WILL REPLACE REG", src, "with", bypass[src])
                     self.operand_vals.append(bypass[src])
                 else:
-                    if debug:
-                        print("Will get from reg")
+                    if self.debug:
+                        print("Will get from reg", )
                     self.operand_vals.append(gv.R.get(int(src[1:])))
-        # print("***", str(self), self.operand_vals)
+        if self.debug:
+            print("***", str(self), self.operand_vals)
 
     def execute(self):
         pass
@@ -161,7 +194,7 @@ class MEMInstruction(Instruction):
 
 class REGWRITEBACKInstruction(Instruction):
     def writeback(self):
-        if debug:
+        if self.debug:
             print("WRITING", str(self))
             print(self.dest)
         gv.R.set(int(self.dest[1:]), self.result)

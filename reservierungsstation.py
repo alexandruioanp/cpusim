@@ -16,8 +16,8 @@ class Reservierungsstation:
             self.num_eu += self.eu_conf[type]
 
         self.execUnits = []
-        self.buffer_size = 16
-        assert self.buffer_size < gv.ROB_entries
+        self.buffer_size = 24
+        # assert self.buffer_size < gv.ROB_entries
         self.shelved_instr = deque()
         self.status = "READY"
         self.result_bus = {-1: -1}
@@ -41,8 +41,8 @@ class Reservierungsstation:
             instr.canDispatch = False
             return
 
-        all_src_regs_free = gv.R.all_available(instr.get_src_regs(), instr)
-        all_dest_regs_free = gv.R.all_available(instr.get_dest_regs(), instr)
+        all_src_regs_free = gv.R.all_available(instr.get_unique_src_regs(), instr)
+        all_dest_regs_free = gv.R.all_available(instr.get_unique_dest_regs(), instr)
 
         if not gv.bypassing and not (all_src_regs_free and all_dest_regs_free):
             instr.canDispatch = False
@@ -62,6 +62,7 @@ class Reservierungsstation:
             instr.canDispatch = False
             return
 
+        # TODO: optimise this
         # shelf test ok?
         #   s     s   Y
         #   s     d   N
@@ -83,7 +84,7 @@ class Reservierungsstation:
 
 
         if gv.bypassing:
-            which_locked = gv.R.which_locked(instr.get_src_regs(), instr)
+            which_locked = gv.R.which_locked(instr.get_unique_src_regs(), instr)
 
             results_forwarded = True
 
@@ -96,7 +97,7 @@ class Reservierungsstation:
                 # print("")
 
         if gv.bypassing:
-            which_locked = gv.R.which_locked(instr.get_src_regs(), instr)
+            which_locked = gv.R.which_locked(instr.get_unique_src_regs(), instr)
             wlb = list(which_locked)
 
             results_forwarded = True
@@ -116,7 +117,7 @@ class Reservierungsstation:
             canDispatch2 = all_src_regs_free and all_dest_regs_free \
                            and not (instr.isMemAccess and (mem_access_in_flight or mem_access_before_instr))
 
-            for r in instr.get_dest_regs():
+            for r in instr.get_unique_dest_regs():
                 try:
                     # print(instr, "deletes", "R" + str(r), self.result_bus["R" + str(r)])
                     del self.result_bus["R" + str(r)]
@@ -148,6 +149,7 @@ class Reservierungsstation:
 
     # check if instructions can go ahead, push them to available execution units
     def do(self):
+        assert len(self.shelved_instr) <= self.buffer_size
         self.processRetiredInstructions()
 
         for instr in self.shelved_instr:
@@ -195,7 +197,7 @@ class Reservierungsstation:
 
         # results on data bus no longer valid
         if gv.bypassing:
-            for r in instr.get_dest_regs():
+            for r in instr.get_unique_dest_regs():
                 try:
                     del self.result_bus["R" + str(r)]
                 except KeyError:
@@ -203,9 +205,13 @@ class Reservierungsstation:
 
     def processRetiredInstructions(self):
         for instr in list(self.instr_in_flight):
+            # if gv.debug_timing:
+            #     print("Processing", instr, "done?", instr.isRetired)
             if instr.isRetired or instr.misspeculated:
                 self.instr_in_flight.remove(instr)
                 gv.R.unlock_regs(instr.get_all_regs_touched(), instr)
+                if gv.debug_timing:
+                    print(instr, "unlocking regs:", instr.get_all_regs_touched())
             if instr.misspeculated and gv.debug_spec:
                 print("Misspeculated instr in flight", instr.asm)
 
@@ -214,7 +220,7 @@ class Reservierungsstation:
         for eu in self.execUnits:
             if eu.status == "READY" and eu.instr: # finished and not processed
                 if gv.debug_timing:
-                    print(eu.instr, "unlocked EU:", self.avail_eu, "ready", eu.instr.isExecuted)
+                    print(eu.instr, "unlocking EU:", self.avail_eu, "ready", eu.instr.isExecuted)
                 self.release_eu(eu.instr)
                 # read bypassed data on bus, regs
                 if gv.bypassing and eu.bypassed:
