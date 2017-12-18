@@ -13,9 +13,11 @@ class RegisterFile:
             self.available = {}
             self.locked_by = {}
 
-            self.remap_file = {}
-            self.prev_remap_file = {}
+            self.remap_file = [-1] * num_reg
+            self.prev_remap_file = [-1] * num_reg
             self.remap_count = {}
+
+            self.num_arch_reg = num_reg
 
             for i in range(100, 101 + num_phys_regs - 1):
                 self.available[i] = True
@@ -33,14 +35,14 @@ class RegisterFile:
         if self.debug:
             print("REG: SPECULATING. BACKING UP REMAP FILE")
             print("Remap file backup", self.remap_file)
-        self.prev_remap_file = dict(self.remap_file)
+        self.prev_remap_file = list(self.remap_file)
 
     def undoSpeculation(self):
         if self.debug:
             print("REG: RESTORING REMAP FILE")
             print("BEFORE", self.remap_file)
-        self.remap_file = dict(self.prev_remap_file)
-        self.prev_remap_file = {}
+        self.remap_file = list(self.prev_remap_file)
+        self.prev_remap_file = [-1] * self.num_arch_reg
 
         if self.debug:
             print("AFTER restoring", self.remap_file)
@@ -92,16 +94,16 @@ class RegisterFile:
             print("SRC:")
 
         for src_reg in src_regs:
-            try:
-                tag = self.remap_file[src_reg]
-                if gv.debug_ren:
-                    print("tag for", src_reg, "is", self.remap_file[src_reg])
-            except KeyError:
+            tag = self.remap_file[src_reg]
+            if tag == -1:
                 if gv.debug_ren:
                     print("allocating new tag for", src_reg)
                 tag = self.get_new_free_tag(src_reg)
                 if gv.debug_ren:
                     print("new tag is", tag)
+
+            if gv.debug_ren:
+                print("tag for", src_reg, "is", self.remap_file[src_reg])
 
             new_src_regs.append(tag)
 
