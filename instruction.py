@@ -58,12 +58,12 @@ class Instruction():
     def set_renamed_regs(self, src, dest):
         if gv.debug_ren:
             print('--------------------------------')
-            print(">>>>> before", "src", self.src, "dest", self.dest)
-
-            print("__get_reg_nums()", self._get_reg_nums())
-            print("srcreg", self.srcRegNums)
-            print("destreg", self.destRegNums)
-            print("allreg", self.allRegNums)
+            print(">>>>> before", self.asm, "src", self.src, "dest", self.dest)
+        #
+        #     print("__get_reg_nums()", self._get_reg_nums())
+        #     print("srcreg", self.srcRegNums)
+        #     print("destreg", self.destRegNums)
+        #     print("allreg", self.allRegNums)
 
         temp_src = []
         for i in range(len(self.src)):
@@ -80,12 +80,12 @@ class Instruction():
         self.set_all_regs_touched()
 
         if gv.debug_ren:
-            print(">>>>> after", "src", self.src, "dest", self.dest)
-            print("__get_reg_nums()", self._get_reg_nums())
-            print("srcreg", self.srcRegNums)
-            print("destreg", self.destRegNums)
-            print("allreg", self.allRegNums)
-            print('--------------------------------')
+            print(">>>>> after", self.asm, "src", self.src, "dest", self.dest)
+            # print("__get_reg_nums()", self._get_reg_nums())
+            # print("srcreg", self.srcRegNums)
+            # print("destreg", self.destRegNums)
+            # print("allreg", self.allRegNums)
+            # print('--------------------------------')
 
     def get_unique_src_regs(self):
         return self.srcRegNums
@@ -143,33 +143,33 @@ class Instruction():
         self.allRegNums = []
 
     def evaluate_operands(self, bypass):
-        if self.debug:
-            print("-" * 30)
-        if self.debug:
-            print("Evaluating", str(self))
+        # if self.debug:
+        #     print("-" * 30)
+        # if self.debug:
+        #     print("Evaluating", str(self))
 
         self.operand_vals = []
 
         for idx, src in enumerate(self.src):
-            if self.debug:
-                print(idx, ".src", src)
+            # if self.debug:
+            #     print(idx, ".src", src)
             try:
                 src = int(src)
 
-                if self.debug:
-                    print("using immediate value")
+                # if self.debug:
+                #     print("using immediate value")
                 self.operand_vals.append(src)
             except ValueError:
                 if src in bypass.keys():
-                    if self.debug:
-                        print("WILL REPLACE REG", src, "with", bypass[src])
+                    # if self.debug:
+                    #     print("WILL REPLACE REG", src, "with", bypass[src])
                     self.operand_vals.append(bypass[src])
                 else:
-                    if self.debug:
-                        print("Will get from reg", )
+                    # if self.debug:
+                    #     print("Will get from reg", )
                     self.operand_vals.append(gv.R.get(int(src[1:])))
-        if self.debug:
-            print("***", str(self), self.operand_vals)
+        # if self.debug:
+        #     print("***", str(self), self.operand_vals)
 
     def execute(self):
         pass
@@ -189,15 +189,17 @@ class MEMInstruction(Instruction):
     def decode(self):
         super(MEMInstruction, self).decode()
         self.type = "MEMORY"
-        self.duration = 5
+        self.duration = 1
 
 
 class REGWRITEBACKInstruction(Instruction):
     def writeback(self):
         if self.debug:
             print("WRITING", str(self))
-            print(self.dest)
         gv.R.set(int(self.dest[1:]), self.result)
+        if self.debug:
+            # print("exec:", self, "dest", self.dest, "=", self.result)
+            print("exec:", self, "=", self.result)
 
 
 class JMPInstruction(BRANCHInstruction):
@@ -222,19 +224,28 @@ class JUMPInstruction(BRANCHInstruction): # JUMP R2
         super(JUMPInstruction, self).decode()
         self.src = [self.operands[0]]
         self.set_all_regs_touched()
+        self.cachedTarget = -1
+        self.wrongTarget = False
 
     def execute(self):
         if gv.debug_spec:
             print("EXECUTING JUMP to", self.operand_vals[0])
         self.target = self.operand_vals[0]
-        # if not self.executedSpeculatively:  # branch has already executed speculatively
-        gv.fu.jump(self)
-        # else:
-        #     if gv.debug_spec:
-        #         print("won't branch again", self)
+
         self.correctPrediction = True
         self.isTaken = True
 
+        if self.cachedTarget != self.operand_vals[0]:
+            self.wrongTarget = True
+            gv.btb_wrong += 1
+
+        gv.br_pred.cache_indirect_target(self.pc, self.target)
+
+        if not self.executedSpeculatively:  # branch has already executed speculatively
+            gv.fu.jump(self)
+        else:
+            if gv.debug_spec:
+                print("won't branch again", self)
 
 class CONDBRANCHInstruction(BRANCHInstruction):
     def decode(self):
@@ -254,6 +265,8 @@ class CONDBRANCHInstruction(BRANCHInstruction):
         self.set_all_regs_touched()
 
     def execute(self):
+        if self.debug:
+            print("ex:", self, "vals", self.operand_vals, "is", self.operand_vals[0], self.opcode)
         if self.operator(self.operand_vals[0], 0):
             if not self.executedSpeculatively : # branch has already executed speculatively
                 gv.fu.jump(self)
@@ -317,6 +330,9 @@ class STOREInstruction(MEMInstruction):
         gv.data_mem[i2] = c
         gv.data_mem[i3] = d
 
+        if self.debug:
+            print(self.asm, "storing value", self.operand_vals[0], "to", self.operand_vals[1] + self.operand_vals[2])
+            print("location", i0)
 
 # LOAD R5,R0,8 (src <- dest + offset)
 class LOADInstruction(REGWRITEBACKInstruction, MEMInstruction):
@@ -336,6 +352,12 @@ class LOADInstruction(REGWRITEBACKInstruction, MEMInstruction):
 
         if self.result >> 31 == 1:
             self.result = -((0xFFFFFFFF^self.result) + 1)
+
+        if self.debug:
+            # print(self.asm, "loading value", self.result, "to", self.dest, "from", self.operand_vals[0] + self.operand_vals[1])
+            print(self.asm, "loading value", self.result, "from", self.operand_vals[0] + self.operand_vals[1])
+            print("location", a)
+
 
 # LDI R2,76 (dest = imm)
 class LDIInstruction(REGWRITEBACKInstruction):
@@ -361,8 +383,13 @@ class WRInstruction(Instruction):
 
     def writeback(self):
         if not gv.suppress_prog_stdout:
+            # if gv
+            # sys.stdout.write("^")
             sys.stdout.write(self.result)
+            # sys.stdout.write("^")
             sys.stdout.flush()
+        if gv.debug_ren:
+            print("WR:", self.src[0], "(", gv.R.reg_from_tag(self.src[0]), ")", "is", self.operand_vals[0])
 
 # SUBI R6,R1,0 (dest = src - imm) /// SUB R5,R2,R0 (dest = src1 - src2)
 class SUBInstruction(REGWRITEBACKInstruction):
@@ -371,7 +398,7 @@ class SUBInstruction(REGWRITEBACKInstruction):
         self.dest = self.operands[0]
         self.src = list(self.operands[1:])
         self.set_all_regs_touched()
-        self.duration = 5
+        self.duration = 1
 
     def execute(self):
         self.result = self.operand_vals[0] - self.operand_vals[1]
@@ -408,7 +435,7 @@ class DIVInstruction(REGWRITEBACKInstruction):
         super(DIVInstruction, self).decode()
         self.dest = self.operands[0]
         self.src = list(self.operands[1:])
-        self.duration = 3
+        self.duration = 10
         self.set_all_regs_touched()
 
     def execute(self):

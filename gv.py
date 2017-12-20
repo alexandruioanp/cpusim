@@ -4,12 +4,14 @@ data_mem = []
 unit_statuses = []
 stages = []
 instr_exec = 0
-issue_rate = 2
+issue_rate = 4
 ROB = None
-ROB_entries = 24
+ROB_entries = 32
 retired = 0
 retire_rate = issue_rate
 wb = None
+btb_wrong = 0
+btb_all = 0
 
 num_branches = 0
 mispred = 0
@@ -31,7 +33,10 @@ debug_spec = False
 debug_timing = False
 debug_ren = False
 
-reg_renaming = True
+reg_renaming = False
 
 print_trace = False
 suppress_prog_stdout = False
+
+br_pred = None
+BTB_enabled = True

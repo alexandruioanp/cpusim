@@ -32,7 +32,7 @@ class FetchUnit:
             print(">>>>>>>>>> Actually TAKEN", instr.isTaken)
 
         if instr.isTaken: # prediction was NOT TAKEN; it actually was TAKEN
-            assert instr.predictedTaken == False
+            assert (instr.predictedTaken == False or instr.wrongTarget)
             self.pc = instr.target
             if gv.debug_spec:
                 print("will continue from", self.pc)

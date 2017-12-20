@@ -60,9 +60,16 @@ class Computor:
             print("IPC:", gv.retired / self.env.now)
             print("*************************************")
             print("Conditional branches:", gv.cond_br, "Total branches:", gv.num_branches)
-            if gv.speculationEnabled:
+            if gv.mispred:
                 print("Mispredictions:      ", gv.mispred, '|', "%.2f%%" % (100*gv.mispred/gv.cond_br))
-
+            else:
+                print("Mispredictions:      ", gv.mispred)
+            if gv.BTB_enabled:
+                print("Total BTB accesses:", gv.btb_all)
+                if gv.btb_all:
+                    print("BTB wrong:      ", gv.btb_wrong, '|', "%.2f%%" % (100 * gv.btb_wrong/gv.btb_all))
+                else:
+                    print("BTB wrong:      ", gv.btb_wrong)
 
 def assemble(asm, program, clean):
     label_targets = {}
@@ -127,6 +134,9 @@ def print_data_mem():
 
 def main(args):
     gv.bypassing = args.bypass
+    gv.reg_renaming = args.ren
+    gv.BTB_enabled = args.btb
+
     input_filename = args.file
 
     with open(input_filename, 'r') as ass_file:
@@ -172,6 +182,10 @@ if __name__ == '__main__':
                         help='Bypass results')
     parser.add_argument('--spec', required=False, default=1, type=int, choices={0, 1},
                         help='Speculative execution')
+    parser.add_argument('--ren', required=False, default=0, type=int, choices={0, 1},
+                        help='Register renaming')
+    parser.add_argument('--btb', required=False, default=1, type=int, choices={0, 1},
+                        help='Branch target buffer')
 
     args = parser.parse_args()
 

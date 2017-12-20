@@ -3,6 +3,7 @@ from instruction import *
 
 class BrPredictor:
     def __init__(self):
+        self.btc = {}
         pass
 
     def taken(self, instr):
@@ -10,7 +11,17 @@ class BrPredictor:
             return True
 
         if isinstance(instr, JUMPInstruction):
-            return False
+            if gv.BTB_enabled:
+                try:
+                    instr.cachedTarget = self.btc[instr.pc]
+                    instr.target = instr.cachedTarget
+                    gv.btb_all += 1
+                    return True
+                except KeyError:
+                    instr.cachedTarget = -1
+                    return False
+            else:
+                return False
 
         # print(instr.pc, instr.target)
 
@@ -27,3 +38,6 @@ class BrPredictor:
             print("predicting ", instr, "as", "taken" if prediction else "not taken")
 
         return prediction
+
+    def cache_indirect_target(self, pc, target):
+        self.btc[pc] = target

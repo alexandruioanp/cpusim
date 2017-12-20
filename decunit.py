@@ -12,6 +12,7 @@ class DecUnit:
         self.last_bundle = None
         self.status = "READY"
         self.brpred = BrPredictor()
+        gv.br_pred = self.brpred
         self.last_branch = None
         self.instr_bundle = []
 
@@ -25,8 +26,6 @@ class DecUnit:
             self.last_bundle = deque()
             for idx, instr in enumerate(self.instr_bundle):
                 instr.decode()
-                if gv.reg_renaming:
-                    gv.R.rename(instr)
 
                 if not gv.speculationEnabled:
                     if instr.isUncondBranch:
@@ -36,6 +35,11 @@ class DecUnit:
                         self.last_bundle.append(instr)
                 else:
                     self.last_bundle.append(instr)
+                    if instr.isUncondBranch:
+                        break
+
+                if gv.reg_renaming:
+                    gv.R.rename(instr)
 
         self.status = "BUSY"
 
@@ -89,13 +93,13 @@ class DecUnit:
                             gv.speculating = True
                             self.last_branch = instr
                             if gv.debug_spec:
-                                print("AM SPECUL:ATING NOW", instr)
+                                print("AM SPECULATING NOW", instr)
+                            gv.R.speculate()
                             if instr.predictedTaken:
                                 instr.executedSpeculatively = True
                                 if gv.debug_spec:
                                     print("ID: WILL JUMP")
                                 gv.fu.jump(instr, speculative=True)
-                                gv.R.speculate()
                                 if gv.debug_spec:
                                     print("last bundle", [x.asm for x in self.last_bundle])
                                 self.last_bundle = deque()  # ?

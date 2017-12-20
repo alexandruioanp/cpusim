@@ -1,6 +1,6 @@
 import gv
 from pipeline import *
-import instruction
+from instruction import *
 from collections import deque
 import simpy
 
@@ -36,7 +36,7 @@ class WBUnit:
                         gv.ROB.popleft()
                         instr.writeback()
                         if gv.reg_renaming:
-                            gv.R.release_tags(instr)
+                            self.release_tags(instr)
 
                         if not instr.opcode == "JMP": # CHEAT
                             gv.retired += 1
@@ -86,7 +86,7 @@ class WBUnit:
                         print(instr.asm + ", ", end='')
                     instr.writeback()
                     if gv.reg_renaming:
-                        gv.R.release_tags(instr)
+                        self.release_tags(instr)
                     instr.isRetired = True
                     gv.retired += 1
                     if instr.opcode == "HALT":
@@ -101,11 +101,38 @@ class WBUnit:
         if gv.debug_timing:
             print("")
 
+    def release_tags(self, instr):
+        if gv.debug_ren:
+            print("ROB is", [x.asm for x in gv.ROB])
+        tags_in_use = self.get_tags_in_ROB()
+        for tag in instr.get_all_regs_touched():
+            if gv.debug_ren:
+                print(instr, "wants to free", tag)
+            if tag in tags_in_use:
+                if gv.debug_ren:
+                    print("WILL NOT RELEASE TAG", tag)
+            else:
+                gv.R.release_tag(tag)
+
+    def get_tags_in_ROB(self):
+        tags = []
+        import itertools
+        for instr in list(itertools.islice(gv.ROB, 1)):
+            tags += (instr.get_all_regs_touched())
+            if gv.debug_ren:
+                print("instr using tags", instr, instr.get_all_regs_touched())
+
+        if gv.debug_ren:
+            print("TAGS IN USE", tags, "by", [gv.R.reg_from_tag(x) for x in tags])
+
+
+        return tags
+
     def is_full(self):
         return len(gv.ROB) == gv.ROB_entries
 
     def resolveSpeculation(self, instr):
-        if instr.isTaken != instr.predictedTaken: # wrong
+        if instr.isTaken != instr.predictedTaken or (isinstance(instr, JUMPInstruction) and instr.wrongTarget): # wrong
             instr.correctPrediction = False
             if gv.debug_spec:
                 print("MUST UNDO")
