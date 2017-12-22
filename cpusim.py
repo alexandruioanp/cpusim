@@ -202,12 +202,8 @@ if __name__ == '__main__':
     parser.add_argument('--file', required=True, help='Input .ass file')
     parser.add_argument('--stats', required=False, default=0, type=int, choices={0, 1},
                         help='Print run stats')
-    parser.add_argument('--bypass', required=False, default=1, type=int, choices={0, 1},
-                        help='Bypass results')
     parser.add_argument('--spec', required=False, default=1, type=int, choices={0, 1},
                         help='Speculative execution')
-    parser.add_argument('--ren', required=False, default=0, type=int, choices={0, 1},
-                        help='Register renaming')
     parser.add_argument('--btb', required=False, default=1, type=int, choices={0, 1},
                         help='Branch target buffer')
     parser.add_argument('--pred', required=False, default=2, type=int, choices={0, 1, 2},
@@ -217,8 +213,15 @@ if __name__ == '__main__':
                             2 - dynamic (2-bit saturating counter)')
     parser.add_argument('--nonpipe', required=False, default=0, type=int, choices={0, 1},
                         help='Non-pipelined mode')
-    parser.add_argument('--fpipe', required=False, default=1, type=int, choices={0, 1},
+    parser.add_argument('--fpipe', required=False, default=0, type=int, choices={0, 1},
                         help='Pipelined only mode')
+
+    ##### EXPERIMENTAL ####
+
+    parser.add_argument('--bypass', required=False, default=1, type=int, choices={0, 1},
+                        help='Bypass results')
+    parser.add_argument('--ren', required=False, default=0, type=int, choices={0, 1},
+                        help='Register renaming')
 
     args = parser.parse_args()
 

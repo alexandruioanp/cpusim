@@ -62,7 +62,6 @@ class Reservierungsstation:
             instr.canDispatch = False
             return
 
-        # TODO: optimise this
         # shelf test ok?
         #   s     s   Y
         #   s     d   N

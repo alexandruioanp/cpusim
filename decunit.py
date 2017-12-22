@@ -49,7 +49,6 @@ class DecUnit:
         if gv.debug_timing:
             print("ID@", str(self.env.now) + ":", [x.asm for x in self.instr_bundle])
 
-        # TODO: check if there is space in ROB; stall otherwise
         while self.last_bundle:
             instr = self.last_bundle[0] # peek
 
@@ -59,10 +58,12 @@ class DecUnit:
                 if gv.debug_timing:
                     print(">>>>>>>>>>>>>> RS FULL")
                 yield self.env.timeout(1)
+
             elif gv.wb.is_full():
                 if gv.debug_timing:
                     print(">>>>>>>>>>>>>> ROB FULL")
                 yield self.env.timeout(1)
+
             else:
                 if gv.speculationEnabled:
                     if instr.isBranch:
