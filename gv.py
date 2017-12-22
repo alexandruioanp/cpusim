@@ -42,3 +42,5 @@ br_pred = None
 BTB_enabled = True
 
 prediction_flavour = 1
+nonpipelined = 0
+pipelinedonly = 0

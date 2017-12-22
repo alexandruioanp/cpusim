@@ -56,7 +56,6 @@ class FetchUnit:
 
     def fetch(self, num):
         instr = self.instruction_stream[self.pc:self.pc + num]
-        # instrpc = self.pc
 
         if gv.debug_timing:
             print("Fe@", str(self.env.now) + ": ", end='')

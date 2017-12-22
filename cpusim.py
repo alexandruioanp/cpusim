@@ -34,22 +34,42 @@ class Computor:
 
     def run_simpy(self):
         while True:
-            self.env.process(gv.pipeline.advance_yield())
-            self.env.process(self.wbunit.do())  # W
-            if self.rs.status == "READY":
-                self.env.process(self.rs.do())  # RS
-            if self.decodeunit.status == "READY":
-                self.env.process(gv.stages[1].do())  # D
-            self.env.process(gv.stages[0].do())  # F
+            if not gv.nonpipelined:
+                self.env.process(gv.pipeline.advance_yield())
+                self.env.process(self.wbunit.do())  # W
+                if self.rs.status == "READY":
+                    self.env.process(self.rs.do())  # RS
+                if self.decodeunit.status == "READY":
+                    self.env.process(gv.stages[1].do())  # D
+                self.env.process(gv.stages[0].do())  # F
 
-            if gv.debug_timing:
-                print("")
+                if gv.debug_timing:
+                    print("")
 
-            if self.wbunit.haltRetired:
-                break
+                if self.wbunit.haltRetired:
+                    break
 
-            yield self.env.timeout(1)
-            # print(self.env.now)
+                yield self.env.timeout(1)
+            else:
+                self.env.process(gv.pipeline.advance_yield())
+                self.env.process(self.wbunit.do())  # W
+                yield self.env.timeout(1)
+                if self.rs.status == "READY":
+                    self.env.process(self.rs.do())  # RS
+                yield self.env.timeout(1)
+                if self.decodeunit.status == "READY":
+                    self.env.process(gv.stages[1].do())  # D
+                yield self.env.timeout(1)
+                self.env.process(gv.stages[0].do())  # F
+                yield self.env.timeout(1)
+
+                if gv.debug_timing:
+                    print("")
+
+                if self.wbunit.haltRetired:
+                    break
+
+                yield self.env.timeout(1)
 
         if self.print_stats:
             print("")
@@ -138,6 +158,10 @@ def main(args):
     gv.reg_renaming = args.ren
     gv.BTB_enabled = args.btb
     gv.prediction_flavour = args.pred
+    gv.nonpipelined = args.nonpipe
+    gv.pipelinedonly = args.fpipe
+    if gv.nonpipelined or gv.pipelinedonly:
+        gv.issue_rate = 1
 
     input_filename = args.file
 
@@ -148,7 +172,7 @@ def main(args):
     clean_asm = []
     assemble(asm, program, clean_asm)
 
-    with open("t6.asm", 'w') as outf:
+    with open("decoded-dump.asm", 'w') as outf:
         for line in clean_asm:
             outf.write(str(line[1]) + '. ' + line[0])
             outf.write('\n')
@@ -176,8 +200,6 @@ def main(args):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--file', required=True, help='Input .ass file')
-    parser.add_argument('--simpy', required=False, default=1, type=int, choices={0, 1},
-                        help='Run using simpy?')
     parser.add_argument('--stats', required=False, default=0, type=int, choices={0, 1},
                         help='Print run stats')
     parser.add_argument('--bypass', required=False, default=1, type=int, choices={0, 1},
@@ -193,6 +215,10 @@ if __name__ == '__main__':
                             0 - fixed (always taken)\n \
                             1 - static (forward not taken, backward taken)\n  \
                             2 - dynamic (2-bit saturating counter)')
+    parser.add_argument('--nonpipe', required=False, default=0, type=int, choices={0, 1},
+                        help='Non-pipelined mode')
+    parser.add_argument('--fpipe', required=False, default=1, type=int, choices={0, 1},
+                        help='Pipelined only mode')
 
     args = parser.parse_args()
 
