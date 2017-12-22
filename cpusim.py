@@ -57,11 +57,12 @@ class Computor:
             print("Cycles taken:", self.env.now)
             print("Instructions executed:", gv.instr_exec)
             print("Instructions retired:", gv.retired)
-            print("IPC:", gv.retired / self.env.now)
+            print("IPC: {0:.2f}".format(gv.retired / self.env.now))
             print("*************************************")
             print("Conditional branches:", gv.cond_br, "Total branches:", gv.num_branches)
             if gv.mispred:
-                print("Mispredictions:      ", gv.mispred, '|', "%.2f%%" % (100*gv.mispred/gv.cond_br))
+                # print("Mispredictions:      ", gv.mispred, '|', "%.2f%%" % (100*gv.mispred/gv.cond_br))
+                print("Correct:             ", gv.cond_br - gv.mispred, '|', "%.2f%%" % (100*(gv.cond_br - gv.mispred)/gv.cond_br))
             else:
                 print("Mispredictions:      ", gv.mispred)
             if gv.BTB_enabled:
@@ -136,6 +137,7 @@ def main(args):
     gv.bypassing = args.bypass
     gv.reg_renaming = args.ren
     gv.BTB_enabled = args.btb
+    gv.prediction_flavour = args.pred
 
     input_filename = args.file
 
@@ -178,7 +180,7 @@ if __name__ == '__main__':
                         help='Run using simpy?')
     parser.add_argument('--stats', required=False, default=0, type=int, choices={0, 1},
                         help='Print run stats')
-    parser.add_argument('--bypass', required=False, default=0, type=int, choices={0, 1},
+    parser.add_argument('--bypass', required=False, default=1, type=int, choices={0, 1},
                         help='Bypass results')
     parser.add_argument('--spec', required=False, default=1, type=int, choices={0, 1},
                         help='Speculative execution')
@@ -186,6 +188,11 @@ if __name__ == '__main__':
                         help='Register renaming')
     parser.add_argument('--btb', required=False, default=1, type=int, choices={0, 1},
                         help='Branch target buffer')
+    parser.add_argument('--pred', required=False, default=2, type=int, choices={0, 1, 2},
+                        help='Predictor flavour.\
+                            0 - fixed (always taken)\n \
+                            1 - static (forward not taken, backward taken)\n  \
+                            2 - dynamic (2-bit saturating counter)')
 
     args = parser.parse_args()
 

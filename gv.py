@@ -40,3 +40,5 @@ suppress_prog_stdout = False
 
 br_pred = None
 BTB_enabled = True
+
+prediction_flavour = 1

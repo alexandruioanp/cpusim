@@ -72,14 +72,14 @@ class Reservierungsstation:
         gv.R.lock_regs(instr.get_all_regs_touched(), instr)
 
         if gv.bypassing:
-            print("BYPASSSING")
+            # print("BYPASSSING")
             for r in instr.get_all_regs_touched():
                 try:
-                    print(instr, "deletes", "R" + str(r), self.result_bus["R" + str(r)])
+                    # print(instr, "deletes", "R" + str(r), self.result_bus["R" + str(r)])
                     del self.result_bus["R" + str(r)]
                     # print(self.result_bus)
                 except KeyError:
-                    print("key error")
+                    # print("key error")
                     pass
 
 

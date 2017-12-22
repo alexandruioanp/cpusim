@@ -3,7 +3,7 @@ from subprocess import Popen, PIPE, STDOUT
 import os
 
 def test_generic(test_name, spec = 0):
-    p = Popen(['python', 'cpusim.py', "--file", os.path.join("tests", test_name, test_name + ".ass"),
+    p = Popen(['python3.5', 'cpusim.py', "--file", os.path.join("tests", test_name, test_name + ".ass"),
                "--spec", str(spec)],
               stdout=PIPE, stdin=PIPE,
               stderr=STDOUT)

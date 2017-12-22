@@ -60,6 +60,7 @@ class WBUnit:
                             print("Resolving speculation because of (spec, ex)", instr, instr.isSpeculative, instr.isExecuted)
 
                         self.resolveSpeculation(instr)
+                        gv.br_pred.update_counter(instr)
 
                         while gv.ROB and gv.ROB[0].misspeculated:
                             instr3 = gv.ROB.popleft()

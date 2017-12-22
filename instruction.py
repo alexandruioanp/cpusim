@@ -304,7 +304,7 @@ class WRSInstruction(Instruction):
     def writeback(self):
         if not gv.suppress_prog_stdout:
             sys.stdout.write(self.result),
-            sys.stdout.flush()
+            # sys.stdout.flush()
 
 
 # STORE R5,R3,0 (src -> dest + offset)
@@ -387,7 +387,7 @@ class WRInstruction(Instruction):
             # sys.stdout.write("^")
             sys.stdout.write(self.result)
             # sys.stdout.write("^")
-            sys.stdout.flush()
+            # sys.stdout.flush()
         if gv.debug_ren:
             print("WR:", self.src[0], "(", gv.R.reg_from_tag(self.src[0]), ")", "is", self.operand_vals[0])
 
@@ -435,7 +435,7 @@ class DIVInstruction(REGWRITEBACKInstruction):
         super(DIVInstruction, self).decode()
         self.dest = self.operands[0]
         self.src = list(self.operands[1:])
-        self.duration = 10
+        self.duration = 3
         self.set_all_regs_touched()
 
     def execute(self):
