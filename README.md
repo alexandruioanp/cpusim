@@ -1,7 +1,7 @@
 # cpusim
 Python-based CPU simulator written for the 4th year Advanced Computer Architecture course at the University of Bristol
 
-The most up-to-date branch is `simpy`.
+### !!! The most up-to-date branch is `simpy`. Make sure to check it out before trying anything. !!!
 
 To run, you need the [simpy discrete-event simulation framework](https://simpy.readthedocs.io/en/latest/).
 
